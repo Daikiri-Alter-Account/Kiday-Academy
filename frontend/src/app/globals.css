@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+:root {
+  --background: #080a12;
+  --foreground: #f5f4ff;
+  --muted: #a5a4ba;
+  --surface: #10111b;
+  --surface-raised: #12131e;
+  --surface-sidebar: #0d0e17;
+  --border: rgb(255 255 255 / 9%);
+  --accent: #a78bfa;
+  --accent-strong: #7c3aed;
+  color-scheme: dark;
+}
+
+[data-theme="light"] {
+  --background: #f5f6fb;
+  --foreground: #19172a;
+  --muted: #66677c;
+  --surface: #ffffff;
+  --surface-raised: #f0eff8;
+  --surface-sidebar: #f7f6fc;
+  --border: rgb(40 35 75 / 12%);
+  --accent: #6d4be8;
+  --accent-strong: #5935d1;
+  color-scheme: light;
+}
+
+[data-theme="violet"] {
+  --background: #111027;
+  --foreground: #f7f5ff;
+  --muted: #b1acce;
+  --surface: #191735;
+  --surface-raised: #201d41;
+  --surface-sidebar: #15132e;
+  --border: rgb(185 163 255 / 15%);
+  --accent: #b8a1ff;
+  --accent-strong: #7957ed;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: #080a12;
+  color: #f5f4ff;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.theme-shell { background: var(--background); color: var(--foreground); transition: background-color 250ms ease, color 250ms ease; }
+button, a { -webkit-tap-highlight-color: transparent; }
+::selection { background: #8b5cf6; color: white; }
+
+.hero-grid {
+  background-image: linear-gradient(rgb(255 255 255 / 3%) 1px, transparent 1px), linear-gradient(90deg, rgb(255 255 255 / 3%) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, black, transparent 85%);
+}
+
+.mock-scrollbar::-webkit-scrollbar { width: 5px; }
+.mock-scrollbar::-webkit-scrollbar-thumb { border-radius: 999px; background: #38354c; }
+
+/* These adjustments let the product preview follow the selected theme too. */
+[data-theme="light"] .hero-grid { opacity: 0.35; }
+[data-theme="light"] .hero-grid { background-image: linear-gradient(rgb(55 45 100 / 6%) 1px, transparent 1px), linear-gradient(90deg, rgb(55 45 100 / 6%) 1px, transparent 1px); }
+[data-theme="light"] .theme-panel { color: #28243b; }
+[data-theme="light"] .theme-panel .text-white { color: #201d31; }
+[data-theme="light"] .theme-panel .text-slate-200,
+[data-theme="light"] .theme-panel .text-slate-300 { color: #454258; }
+[data-theme="light"] .theme-panel .text-slate-400,
+[data-theme="light"] .theme-panel .text-slate-500 { color: #68667a; }
+[data-theme="light"] .theme-panel .text-slate-600 { color: #858296; }
+[data-theme="light"] .theme-panel .bg-black\/10 { background-color: rgb(34 27 75 / 4%); }
+[data-theme="light"] .theme-panel .bg-black\/20 { background-color: rgb(34 27 75 / 5%); }
