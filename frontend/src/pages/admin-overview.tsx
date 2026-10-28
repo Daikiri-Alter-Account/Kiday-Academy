@@ -16,7 +16,7 @@ const statCards = [
   { key: "messages", label: "Mensajes totales", icon: Inbox, tone: "bg-violet-500/10 text-violet-300" },
   { key: "newMessages", label: "Sin leer", icon: Mail, tone: "bg-amber-500/10 text-amber-300" },
   { key: "services", label: "Planes activos", icon: Package, tone: "bg-emerald-500/10 text-emerald-300" },
-  { key: "users", label: "Usuarios", icon: UsersRound, tone: "bg-sky-500/10 text-sky-300" },
+  { key: "students", label: "Estudiantes", icon: UsersRound, tone: "bg-sky-500/10 text-sky-300" },
 ] as const;
 
 const dateFormatter = new Intl.DateTimeFormat("es-CO", {

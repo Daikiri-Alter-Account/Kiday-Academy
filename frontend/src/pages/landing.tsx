@@ -45,7 +45,7 @@ export function LandingPage() {
           <nav aria-label="Enlaces del pie" className="flex items-center gap-4 text-[11px] text-[var(--muted)]">
             <a href="#planes" className="transition hover:text-[var(--foreground)]">Planes</a>
             <a href="#contacto" className="transition hover:text-[var(--foreground)]">Contacto</a>
-            <Link to="/app" className="transition hover:text-[var(--foreground)]">Entrar</Link>
+            <Link to="/login" className="transition hover:text-[var(--foreground)]">Entrar</Link>
             <Link to="/admin/login" className="transition hover:text-[var(--foreground)]">Admin</Link>
           </nav>
         </div>

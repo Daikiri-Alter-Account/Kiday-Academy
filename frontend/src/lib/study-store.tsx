@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import { subjects as seedSubjects, type Subject } from "@/data/mock";
+import { useAuth } from "@/lib/auth-context";
 
 export type TaskPriority = "alta" | "media" | "baja";
 
@@ -173,9 +174,17 @@ function seedState(): StudyState {
   };
 }
 
-function loadState(): StudyState {
+function loadState(storageKey: string): StudyState {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    let raw = localStorage.getItem(storageKey);
+    if (!raw && storageKey !== STORAGE_KEY) {
+      const legacy = localStorage.getItem(STORAGE_KEY);
+      if (legacy) {
+        localStorage.setItem(storageKey, legacy);
+        localStorage.removeItem(STORAGE_KEY);
+        raw = legacy;
+      }
+    }
     if (!raw) return seedState();
 
     const parsed = JSON.parse(raw) as Partial<StudyState>;
@@ -191,15 +200,17 @@ function loadState(): StudyState {
 }
 
 export function StudyProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState<StudyState>(loadState);
+  const { user } = useAuth();
+  const storageKey = user ? `${STORAGE_KEY}:${user.id}` : STORAGE_KEY;
+  const [state, setState] = useState<StudyState>(() => loadState(storageKey));
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      localStorage.setItem(storageKey, JSON.stringify(state));
     } catch {
       // El espacio local puede estar bloqueado; la app sigue funcionando en memoria.
     }
-  }, [state]);
+  }, [state, storageKey]);
 
   function addSubject(draft: SubjectDraft) {
     setState((current) => ({

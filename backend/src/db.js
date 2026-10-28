@@ -35,10 +35,13 @@ export async function pingDatabase() {
 async function ensureIndexes(db) {
   await Promise.all([
     db.collection("users").createIndex({ email: 1 }, { unique: true }),
+    db.collection("users").createIndex({ role: 1, createdAt: -1 }),
     db.collection("sessions").createIndex({ tokenHash: 1 }, { unique: true }),
     db.collection("sessions").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
+    db.collection("sessions").createIndex({ userId: 1 }),
     db.collection("services").createIndex({ slug: 1 }, { unique: true }),
     db.collection("services").createIndex({ active: 1, order: 1 }),
     db.collection("messages").createIndex({ createdAt: -1 }),
+    db.collection("messages").createIndex({ status: 1, createdAt: -1 }),
   ]);
 }

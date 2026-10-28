@@ -28,6 +28,7 @@ export async function seedDatabase(db, { admin } = {}) {
         passwordHash: await hashPassword(admin.password),
         role: "admin",
         createdAt: now,
+        updatedAt: now,
       });
       adminCreated = true;
     }

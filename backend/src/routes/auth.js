@@ -1,12 +1,13 @@
 import { Router } from "express";
 import { getDb } from "../db.js";
 import { asyncHandler, HttpError } from "../lib/http.js";
-import { authenticate, createSession, publicUser, verifyPassword } from "../lib/auth.js";
+import { authenticate, createSession, hashPassword, publicUser, verifyPassword } from "../lib/auth.js";
 import { rateLimit } from "../lib/rate-limit.js";
 import { email as validateEmail, string } from "../lib/validate.js";
 
 const router = Router();
 const loginLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 20 });
+const registerLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 10 });
 
 router.post(
   "/login",
@@ -28,6 +29,44 @@ router.post(
       expiresAt: session.expiresAt,
       user: publicUser(user),
     });
+  }),
+);
+
+router.post(
+  "/register",
+  registerLimiter,
+  asyncHandler(async (req, res) => {
+    const name = string(req.body?.name, "nombre", { min: 2, max: 80 });
+    const email = validateEmail(req.body?.email);
+    const password = string(req.body?.password, "contraseña", { min: 8, max: 200, trim: false });
+
+    const db = getDb();
+    const now = new Date();
+
+    try {
+      const result = await db.collection("users").insertOne({
+        name,
+        email,
+        passwordHash: await hashPassword(password),
+        role: "student",
+        createdAt: now,
+        updatedAt: now,
+      });
+
+      const user = { _id: result.insertedId, name, email, role: "student" };
+      const session = await createSession(db, result.insertedId);
+
+      res.status(201).json({
+        token: session.token,
+        expiresAt: session.expiresAt,
+        user: publicUser(user),
+      });
+    } catch (error) {
+      if (error?.code === 11000) {
+        throw new HttpError(409, "Ya existe una cuenta con ese correo.");
+      }
+      throw error;
+    }
   }),
 );
 

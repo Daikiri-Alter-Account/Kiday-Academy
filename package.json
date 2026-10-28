@@ -1,0 +1,13 @@
+{
+  "name": "kiday-academy",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:backend": "npm --prefix backend run dev",
+    "dev:frontend": "npm --prefix frontend run dev",
+    "test": "npm --prefix backend test",
+    "build": "npm --prefix frontend run build",
+    "db:inspect": "npm --prefix backend run db:inspect"
+  }
+}

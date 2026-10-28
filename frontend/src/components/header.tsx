@@ -31,10 +31,10 @@ export function Header() {
           <div className="mr-1">
             <ThemeToggle />
           </div>
-          <Link to="/app" className="rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--muted)] transition hover:bg-white/[0.06] hover:text-[var(--foreground)]">
+          <Link to="/login" className="rounded-xl px-4 py-2.5 text-sm font-medium text-[var(--muted)] transition hover:bg-white/[0.06] hover:text-[var(--foreground)]">
             Iniciar sesión
           </Link>
-          <Link to="/app" className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-950/40 transition hover:-translate-y-0.5 hover:shadow-violet-900/50">
+          <Link to="/registro" className="group inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-950/40 transition hover:-translate-y-0.5 hover:shadow-violet-900/50">
             Empezar gratis <ArrowRight size={16} className="transition group-hover:translate-x-0.5" />
           </Link>
         </div>
@@ -64,8 +64,8 @@ export function Header() {
                 <ThemeToggle />
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <Link to="/app" onClick={() => setMenuOpen(false)} className="rounded-xl border border-[var(--border)] px-3 py-3 text-center text-sm font-medium text-[var(--foreground)]">Iniciar sesión</Link>
-                <Link to="/app" onClick={() => setMenuOpen(false)} className="rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-3 py-3 text-center text-sm font-semibold text-white">Empezar gratis</Link>
+                <Link to="/login" onClick={() => setMenuOpen(false)} className="rounded-xl border border-[var(--border)] px-3 py-3 text-center text-sm font-medium text-[var(--foreground)]">Iniciar sesión</Link>
+                <Link to="/registro" onClick={() => setMenuOpen(false)} className="rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-3 py-3 text-center text-sm font-semibold text-white">Empezar gratis</Link>
               </div>
             </div>
           </div>

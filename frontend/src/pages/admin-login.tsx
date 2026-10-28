@@ -183,6 +183,12 @@ export function AdminLoginPage() {
             <p className="mt-4 text-center text-[10px] leading-4 text-[var(--muted)]">
               El acceso está limitado a cuentas con rol de administrador.
             </p>
+            <p className="mt-3 text-center text-[11px] text-[var(--muted)]">
+              ¿Eres estudiante?{" "}
+              <Link to="/login" className="font-medium text-[var(--accent)] hover:underline">Inicia sesión</Link>
+              {" · "}
+              <Link to="/registro" className="font-medium text-[var(--accent)] hover:underline">Crear cuenta</Link>
+            </p>
           </form>
         </div>
       </div>

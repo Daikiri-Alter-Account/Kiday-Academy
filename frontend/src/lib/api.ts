@@ -51,6 +51,7 @@ export type AdminStats = {
   newMessages: number;
   services: number;
   users: number;
+  students: number;
 };
 
 export type ContactPayload = {
@@ -71,6 +72,12 @@ export type LoginResponse = {
   token: string;
   expiresAt: string;
   user: AuthUser;
+};
+
+export type RegisterPayload = {
+  name: string;
+  email: string;
+  password: string;
 };
 
 export class ApiError extends Error {
@@ -130,6 +137,11 @@ export const api = {
     apiRequest<LoginResponse>("/api/auth/login", {
       method: "POST",
       body: { email, password },
+    }),
+  register: (payload: RegisterPayload) =>
+    apiRequest<LoginResponse>("/api/auth/register", {
+      method: "POST",
+      body: payload,
     }),
   me: () => apiRequest<{ user: AuthUser }>("/api/auth/me"),
   logout: () => apiRequest<void>("/api/auth/logout", { method: "POST" }),

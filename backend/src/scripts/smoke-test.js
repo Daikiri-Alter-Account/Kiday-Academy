@@ -71,6 +71,37 @@ try {
   const unauthorized = await request("/api/admin/messages");
   assert.equal(unauthorized.status, 401);
 
+  const register = await request("/api/auth/register", {
+    method: "POST",
+    body: {
+      name: "Estudiante de prueba",
+      email: "estudiante@kiday.test",
+      password: "clave-estudiante-123",
+    },
+  });
+  assert.equal(register.status, 201);
+  assert.equal(register.data.user.role, "student");
+  assert.ok(register.data.token);
+
+  const studentMe = await request("/api/auth/me", { token: register.data.token });
+  assert.equal(studentMe.status, 200);
+  assert.equal(studentMe.data.user.email, "estudiante@kiday.test");
+
+  const duplicateRegister = await request("/api/auth/register", {
+    method: "POST",
+    body: {
+      name: "Otra persona",
+      email: "estudiante@kiday.test",
+      password: "otra-clave-123",
+    },
+  });
+  assert.equal(duplicateRegister.status, 409);
+
+  const studentAdminAccess = await request("/api/admin/messages", {
+    token: register.data.token,
+  });
+  assert.equal(studentAdminAccess.status, 403);
+
   const badLogin = await request("/api/auth/login", {
     method: "POST",
     body: { email: "admin@kiday.test", password: "incorrecta" },
@@ -98,6 +129,7 @@ try {
   assert.equal(stats.status, 200);
   assert.equal(stats.data.messages, 1);
   assert.equal(stats.data.newMessages, 1);
+  assert.equal(stats.data.students, 1);
 
   const created = await request("/api/admin/services", {
     method: "POST",
@@ -131,6 +163,7 @@ try {
     body: { messages: [{ role: "user", content: "¿Qué plan me recomiendas?" }] },
   });
   assert.equal(ai.status, 503);
+  assert.match(ai.data.error, /no está configurada/i);
 
   const logout = await request("/api/auth/logout", { method: "POST", token });
   assert.equal(logout.status, 204);

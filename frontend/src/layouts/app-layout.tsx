@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Bell,
   BookOpen,
@@ -8,6 +8,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   ListTodo,
+  LogOut,
   Menu,
   Sparkles,
   UsersRound,
@@ -16,6 +17,7 @@ import {
 import { Brand } from "@/components/brand";
 import { SkipLink } from "@/components/skip-link";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useAuth } from "@/lib/auth-context";
 
 const primaryLinks = [
   { label: "Panel principal", to: "/app", icon: LayoutDashboard, end: true },
@@ -95,10 +97,24 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
+function initials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+}
+
 export function AppLayout() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
   const title = titles[location.pathname] ?? "Panel principal";
+
+  async function handleLogout() {
+    await logout();
+    navigate("/login", { replace: true });
+  }
 
   useEffect(() => {
     document.title = `${title} | Kiday Studio`;
@@ -158,7 +174,24 @@ export function AppLayout() {
               <button type="button" aria-label="Notificaciones" className="hidden size-9 place-items-center rounded-lg border border-[var(--border)] text-[var(--muted)] transition hover:text-[var(--foreground)] sm:grid">
                 <Bell size={16} />
               </button>
-              <span className="grid size-9 place-items-center rounded-full bg-gradient-to-br from-violet-400 to-indigo-600 text-[11px] font-semibold text-white">ES</span>
+              <span className="hidden max-w-32 truncate text-xs font-medium text-[var(--muted)] sm:block">
+                {user?.name ?? "Estudiante"}
+              </span>
+              <span
+                title={user?.name ?? "Estudiante"}
+                className="grid size-9 place-items-center rounded-full bg-gradient-to-br from-violet-400 to-indigo-600 text-[11px] font-semibold text-white"
+              >
+                {initials(user?.name ?? "Estudiante")}
+              </span>
+              <button
+                type="button"
+                onClick={handleLogout}
+                aria-label="Cerrar sesión"
+                title="Cerrar sesión"
+                className="grid size-9 place-items-center rounded-lg border border-[var(--border)] text-[var(--muted)] transition hover:text-[var(--foreground)]"
+              >
+                <LogOut size={16} />
+              </button>
             </div>
           </div>
         </header>

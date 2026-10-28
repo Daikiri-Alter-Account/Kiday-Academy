@@ -24,8 +24,10 @@ export function errorHandler(error, req, res, next) {
     else console.error(error);
   }
 
+  const publicMessage = status < 500 || status === 502 || status === 503;
+
   res.status(status).json({
-    error: status >= 500 ? "Error interno del servidor." : error.message,
+    error: publicMessage ? error.message : "Error interno del servidor.",
     ...(error.details ? { details: error.details } : {}),
   });
 }

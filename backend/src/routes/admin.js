@@ -78,14 +78,15 @@ router.get(
   "/stats",
   asyncHandler(async (req, res) => {
     const db = getDb();
-    const [messages, newMessages, services, users] = await Promise.all([
+    const [messages, newMessages, services, users, students] = await Promise.all([
       db.collection("messages").countDocuments(),
       db.collection("messages").countDocuments({ status: "nuevo" }),
       db.collection("services").countDocuments({ active: true }),
       db.collection("users").countDocuments(),
+      db.collection("users").countDocuments({ role: "student" }),
     ]);
 
-    res.json({ messages, newMessages, services, users });
+    res.json({ messages, newMessages, services, users, students });
   }),
 );
 
