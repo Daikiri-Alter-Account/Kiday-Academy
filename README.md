@@ -2,6 +2,8 @@
 
 Plataforma web para estudiantes de colegio, universidad y aprendizaje autónomo. Kiday reúne organización académica, herramientas de estudio, un catálogo de planes, un formulario de contacto real, un panel administrativo y un asistente con IA.
 
+[![CI](https://github.com/Daikiri-Alter-Account/Kiday-Academy/actions/workflows/ci.yml/badge.svg)](https://github.com/Daikiri-Alter-Account/Kiday-Academy/actions/workflows/ci.yml)
+
 Proyecto final del curso de desarrollo web avanzado. Frontend y backend están separados y se despliegan de forma independiente.
 
 - **Frontend publicado:** https://daikiri-alter-account.github.io/Kiday-Academy/
@@ -11,16 +13,19 @@ Proyecto final del curso de desarrollo web avanzado. Frontend y backend están s
 ## Funcionalidades
 
 ### Sitio público
-- Landing responsive con identidad de marca, propuesta de valor, funcionalidades y preguntas frecuentes.
+- Landing responsive con identidad de marca, propuesta de valor y vista previa del producto.
 - Catálogo de planes conectado a MongoDB (`/api/services`), con estados de carga, error y reintento.
 - Formulario de contacto real con validación en cliente y servidor, rate limit y confirmación de envío.
-- Tema claro/oscuro persistente.
+- Metadatos SEO, datos estructurados, iconos, manifiesto y tema claro/oscuro persistente.
 
 ### Aplicación académica
-- Panel con resumen, materias, grupos de estudio, promediador de notas y asistente.
+- Panel con métricas derivadas de las materias y tareas reales, accesos rápidos y resumen de la semana.
+- CRUD de materias con promedio, estado y avance de actividades. Eliminar una materia también elimina sus tareas.
+- Tareas y recordatorios con fecha de entrega, prioridad, filtros, tareas atrasadas y vista de los próximos siete días.
 - Promediador ponderado funcional, con cálculo en vivo y validaciones.
 - Asistente Kiday IA conectado a un proveedor compatible con OpenAI. El backend inyecta el catálogo vigente en el prompt para que las recomendaciones sean reales.
-- Rutas protegidas con fallback de SPA para GitHub Pages.
+- Persistencia local del espacio académico en `localStorage`, sin necesidad de cuenta para probar la app.
+- Rutas del panel administrativo protegidas y fallback de SPA para GitHub Pages.
 
 ### Administración
 - Inicio de sesión con email y contraseña; hash `scrypt` y sesiones opacas con tokens SHA-256.
@@ -45,19 +50,20 @@ No se usan librerías de UI, estado global ni autenticación de terceros. La aut
 ```
 .
 ├── frontend/                 # SPA React + Vite
+│   ├── public/               # iconos, manifiesto, SEO y sitemap
 │   ├── scripts/postbuild.mjs # genera 404.html para GitHub Pages
 │   └── src/
 │       ├── components/       # UI compartida, catálogo, contacto, guards
 │       ├── layouts/          # shells de la app y del panel admin
-│       ├── lib/              # cliente API, auth, tema
-│       └── pages/            # landing, app, admin, 404
+│       ├── lib/              # cliente API, auth, tema y espacio académico
+│       └── pages/            # landing, panel, materias, tareas, admin, 404
 ├── backend/                  # API Express
 │   └── src/
 │       ├── lib/              # auth, validación, rate limit, errores
 │       ├── routes/           # services, contact, auth, admin, ai
 │       ├── scripts/          # seed y smoke test
 │       └── seed.js           # datos iniciales e índices
-├── .github/workflows/        # deploy del frontend a GitHub Pages
+├── .github/workflows/        # CI y deploy del frontend a GitHub Pages
 └── render.yaml               # blueprint del backend en Render
 ```
 
@@ -124,6 +130,8 @@ npm run dev
 
 Abre `http://localhost:5173`. Si no defines `VITE_API_URL`, el cliente usa `http://localhost:4000`.
 
+Las materias y tareas del panel se guardan en el navegador con la clave `kiday-study-workspace-v1`. El catálogo, el contacto, el admin y la IA sí usan la API y MongoDB.
+
 ### 3. Panel administrativo
 
 Entra a `http://localhost:5173/admin/login` con el `ADMIN_EMAIL` y `ADMIN_PASSWORD` definidos en `backend/.env`. El enlace **Admin** también está en el pie de la landing.
@@ -145,6 +153,8 @@ npm run build
 ```
 
 El build ejecuta `tsc --noEmit`, Vite y genera `dist/404.html` para que las rutas profundas funcionen en GitHub Pages.
+
+GitHub Actions ejecuta el workflow **CI** en cada push y pull request: levanta la API con MongoDB en memoria y compila el frontend. El workflow **Deploy frontend to GitHub Pages** publica el sitio desde `main`.
 
 ## Variables de entorno
 
@@ -235,8 +245,8 @@ Para una siguiente etapa se recomienda migrar el token a cookies `HttpOnly`, agr
 
 ## Roadmap
 
-- Cuentas de estudiante y sincronización de materias, notas y tareas.
-- Calendario con recordatorios y notificaciones.
+- Cuentas de estudiante y sincronización de materias, notas y tareas entre dispositivos.
+- Calendario completo con vista mensual, recordatorios por email o push y notificaciones.
 - Comunidades por materia y chats privados.
 - Biblioteca de materiales de estudio.
 - Historial de conversaciones del asistente y límites por plan.
