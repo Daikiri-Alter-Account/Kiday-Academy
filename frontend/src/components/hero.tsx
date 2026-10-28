@@ -120,7 +120,6 @@ export function Hero() {
           <div className="mt-4 flex items-center justify-center gap-2 text-[10px] text-slate-600"><span className="size-1.5 rounded-full bg-emerald-400" /> Una vista previa de tu espacio de estudio</div>
         </div>
 
-        <div id="contacto" className="sr-only">Contacto de Kiday Studio</div>
       </div>
     </section>
   );
