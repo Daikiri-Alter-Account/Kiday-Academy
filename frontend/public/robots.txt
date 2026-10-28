@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /Kiday-Academy/admin/
+
+Sitemap: https://daikiri-alter-account.github.io/Kiday-Academy/sitemap.xml

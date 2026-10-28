@@ -4,8 +4,54 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#080a12" />
-    <meta name="description" content="Organiza tus materias, calcula tu promedio y aprende con inteligencia artificial en Kiday Studio." />
+    <meta
+      name="description"
+      content="Organiza tus materias y tareas, calcula tu promedio, estudia en comunidad y aprende con IA en Kiday Studio."
+    />
+    <meta name="author" content="Kiday Studio" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://daikiri-alter-account.github.io/Kiday-Academy/" />
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="%BASE_URL%favicon-32.png" />
+    <link rel="apple-touch-icon" href="%BASE_URL%apple-touch-icon.png" />
+    <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Kiday Studio" />
+    <meta property="og:locale" content="es_CO" />
+    <meta property="og:title" content="Kiday Studio | Estudia a tu manera" />
+    <meta
+      property="og:description"
+      content="Materias, tareas, promediador, grupos de estudio e IA en un solo lugar. Kiday Academy te acompaña en el colegio, la universidad y el aprendizaje autónomo."
+    />
+    <meta property="og:url" content="https://daikiri-alter-account.github.io/Kiday-Academy/" />
+    <meta property="og:image" content="https://daikiri-alter-account.github.io/Kiday-Academy/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Kiday Studio: todo lo que necesitas para estudiar, en un solo lugar." />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Kiday Studio | Estudia a tu manera" />
+    <meta
+      name="twitter:description"
+      content="Organización académica, promediador, comunidad y un asistente con IA. Empieza gratis en Kiday Academy."
+    />
+    <meta name="twitter:image" content="https://daikiri-alter-account.github.io/Kiday-Academy/og-image.png" />
+
     <title>Kiday Studio | Estudia a tu manera</title>
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "EducationalOrganization",
+        "name": "Kiday Academy",
+        "alternateName": "Kiday Studio",
+        "url": "https://daikiri-alter-account.github.io/Kiday-Academy/",
+        "description": "Plataforma de organización académica y aprendizaje para estudiantes de colegio, universidad y aprendizaje autónomo.",
+        "sameAs": ["https://github.com/Daikiri-Alter-Account/Kiday-Academy"]
+      }
+    </script>
+
     <script>
       try {
         const theme = localStorage.getItem("kiday-theme");
@@ -17,6 +63,11 @@
   </head>
   <body>
     <div id="root"></div>
+    <noscript>
+      <p style="font-family: sans-serif; padding: 2rem; color: #f5f4ff; background: #080a12">
+        Kiday Studio necesita JavaScript para funcionar. Actívalo en tu navegador para continuar.
+      </p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

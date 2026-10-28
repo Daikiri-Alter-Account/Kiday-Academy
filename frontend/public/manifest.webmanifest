@@ -1,0 +1,25 @@
+{
+  "name": "Kiday Studio",
+  "short_name": "Kiday",
+  "description": "Organización académica, tareas, promediador, comunidad y asistente con IA.",
+  "lang": "es",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "background_color": "#080a12",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {
+      "src": "favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

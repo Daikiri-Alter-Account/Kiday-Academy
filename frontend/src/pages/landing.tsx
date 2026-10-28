@@ -5,6 +5,7 @@ import { ContactSection } from "@/components/contact-section";
 import { Header } from "@/components/header";
 import { Hero } from "@/components/hero";
 import { ServicesSection } from "@/components/services-section";
+import { SkipLink } from "@/components/skip-link";
 import { useServices } from "@/lib/use-services";
 
 export function LandingPage() {
@@ -22,16 +23,19 @@ export function LandingPage() {
 
   return (
     <>
+      <SkipLink target="contenido" />
       <Header />
-      <Hero />
-      <ServicesSection
-        services={services}
-        status={status}
-        error={error}
-        onRetry={reload}
-        onSelectPlan={handleSelectPlan}
-      />
-      <ContactSection services={services} subject={subject} onSubjectChange={setSubject} />
+      <main id="contenido">
+        <Hero />
+        <ServicesSection
+          services={services}
+          status={status}
+          error={error}
+          onRetry={reload}
+          onSelectPlan={handleSelectPlan}
+        />
+        <ContactSection services={services} subject={subject} onSubjectChange={setSubject} />
+      </main>
       <footer className="border-t border-[var(--border)] px-5 py-8 sm:px-8">
         <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 sm:flex-row">
           <Brand />

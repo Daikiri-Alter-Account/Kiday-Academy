@@ -10,6 +10,7 @@ import {
   X,
 } from "lucide-react";
 import { Brand } from "@/components/brand";
+import { SkipLink } from "@/components/skip-link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/lib/auth-context";
 
@@ -87,6 +88,7 @@ export function AdminLayout() {
 
   return (
     <div className="flex min-h-screen bg-[var(--background)] text-[var(--foreground)]">
+      <SkipLink target="contenido-admin" />
       <aside className="sticky top-0 hidden h-screen w-64 shrink-0 overflow-y-auto border-r border-[var(--border)] bg-[var(--surface-sidebar)] p-4 md:block">
         <AdminNav />
       </aside>
@@ -143,7 +145,7 @@ export function AdminLayout() {
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <main id="contenido-admin" tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <Outlet />
         </main>
       </div>

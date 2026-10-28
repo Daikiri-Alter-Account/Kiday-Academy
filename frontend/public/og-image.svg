@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#080a12" />
+      <stop offset="0.55" stop-color="#100b26" />
+      <stop offset="1" stop-color="#1b1040" />
+    </linearGradient>
+    <linearGradient id="mark" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a78bfa" />
+      <stop offset="1" stop-color="#4f46e5" />
+    </linearGradient>
+    <linearGradient id="text" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#ddd6fe" />
+      <stop offset="0.5" stop-color="#f0abfc" />
+      <stop offset="1" stop-color="#a5b4fc" />
+    </linearGradient>
+    <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
+      <path d="M48 0H0V48" fill="none" stroke="#ffffff" stroke-opacity="0.045" />
+    </pattern>
+    <filter id="blur">
+      <feGaussianBlur stdDeviation="70" />
+    </filter>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <rect width="1200" height="630" fill="url(#grid)" />
+  <circle cx="980" cy="80" r="240" fill="#7c3aed" fill-opacity="0.28" filter="url(#blur)" />
+  <circle cx="160" cy="590" r="220" fill="#4f46e5" fill-opacity="0.22" filter="url(#blur)" />
+
+  <g transform="translate(84 78)">
+    <rect width="64" height="64" rx="17" fill="url(#mark)" />
+    <path d="M18 17h8v13.4L37.8 17H48L34.8 31.6 48.6 47H38.2L26 32.7V47h-8V17Z" fill="#fff" />
+    <text x="86" y="43" font-family="DejaVu Sans, sans-serif" font-size="34" font-weight="700" fill="#f5f4ff">Kiday <tspan fill="#c4b5fd">Studio</tspan></text>
+  </g>
+
+  <text x="84" y="280" font-family="DejaVu Sans, sans-serif" font-size="74" font-weight="700" letter-spacing="-3" fill="#f8f7ff">Todo lo que necesitas</text>
+  <text x="84" y="366" font-family="DejaVu Sans, sans-serif" font-size="74" font-weight="700" letter-spacing="-3" fill="url(#text)">para estudiar, en un lugar.</text>
+
+  <text x="84" y="432" font-family="DejaVu Sans, sans-serif" font-size="27" fill="#b9b6d0">Materias, tareas, promediador, grupos de estudio e IA.</text>
+
+  <g font-family="DejaVu Sans, sans-serif" font-size="19" fill="#ddd6fe">
+    <rect x="84" y="486" width="188" height="52" rx="26" fill="#8b5cf6" fill-opacity="0.14" stroke="#a78bfa" stroke-opacity="0.25" />
+    <text x="116" y="518">Organización</text>
+    <rect x="288" y="486" width="160" height="52" rx="26" fill="#8b5cf6" fill-opacity="0.14" stroke="#a78bfa" stroke-opacity="0.25" />
+    <text x="320" y="518">Kiday IA</text>
+    <rect x="464" y="486" width="176" height="52" rx="26" fill="#8b5cf6" fill-opacity="0.14" stroke="#a78bfa" stroke-opacity="0.25" />
+    <text x="496" y="518">Comunidad</text>
+  </g>
+
+  <text x="1116" y="560" text-anchor="end" font-family="DejaVu Sans, sans-serif" font-size="20" fill="#7f7b9c">kiday.studio</text>
+</svg>
