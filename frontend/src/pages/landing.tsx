@@ -25,7 +25,7 @@ export function LandingPage() {
     <>
       <SkipLink target="contenido" />
       <Header />
-      <main id="contenido">
+      <main id="contenido" tabIndex={-1}>
         <Hero />
         <ServicesSection
           services={services}
