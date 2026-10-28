@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   ArrowRight,
   Bell,
@@ -44,12 +43,12 @@ export function Hero() {
           </p>
 
           <div className="mt-8 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center">
-            <Link href="#registro" className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 text-sm font-semibold text-white shadow-[0_8px_35px_rgba(109,40,217,0.28)] transition hover:-translate-y-0.5 hover:from-violet-500 hover:to-indigo-500 hover:shadow-[0_12px_40px_rgba(109,40,217,0.38)]">
+            <a href="#registro" className="group inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-6 text-sm font-semibold text-white shadow-[0_8px_35px_rgba(109,40,217,0.28)] transition hover:-translate-y-0.5 hover:from-violet-500 hover:to-indigo-500 hover:shadow-[0_12px_40px_rgba(109,40,217,0.38)]">
               <Sparkles size={17} /> Comenzar ahora, es gratis <ArrowRight size={17} className="transition group-hover:translate-x-1" />
-            </Link>
-            <Link href="#funcionalidades" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-white/[0.03] px-6 text-sm font-semibold text-[var(--foreground)] transition hover:border-white/20 hover:bg-white/[0.07]">
+            </a>
+            <a href="#funcionalidades" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-[var(--border)] bg-white/[0.03] px-6 text-sm font-semibold text-[var(--foreground)] transition hover:border-white/20 hover:bg-white/[0.07]">
               Explorar funciones
-            </Link>
+            </a>
           </div>
 
           <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-slate-500">
