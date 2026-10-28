@@ -128,7 +128,6 @@ try {
 
   const ai = await request("/api/ai/chat", {
     method: "POST",
-    token,
     body: { messages: [{ role: "user", content: "¿Qué plan me recomiendas?" }] },
   });
   assert.equal(ai.status, 503);

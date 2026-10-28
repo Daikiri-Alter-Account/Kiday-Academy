@@ -1,14 +1,15 @@
 import { Router } from "express";
 import { config } from "../config.js";
 import { getDb } from "../db.js";
-import { authenticate } from "../lib/auth.js";
 import { asyncHandler, HttpError } from "../lib/http.js";
+import { rateLimit } from "../lib/rate-limit.js";
 
 const router = Router();
+const chatLimiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 20 });
 
 router.post(
   "/chat",
-  authenticate,
+  chatLimiter,
   asyncHandler(async (req, res) => {
     if (!config.ai.key) {
       throw new HttpError(
