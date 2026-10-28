@@ -1,29 +1,29 @@
 {
-  "name": "kiday-studio-frontend",
+  "name": "kiday-academy",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc --noEmit && vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.18.5"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.0.0",
+    "@types/node": "^22.10.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "@types/node": "^22.10.0",
+    "@vitejs/plugin-react": "^4.3.4",
     "tailwindcss": "^4.0.0",
     "typescript": "^5.7.2",
-    "vite": "^6.0.7",
-    "@vitejs/plugin-react": "^4.3.4"
+    "vite": "^6.0.7"
   },
   "allowScripts": {
-    "unrs-resolver@1.12.2": true,
     "esbuild@0.25.12": true
   }
 }

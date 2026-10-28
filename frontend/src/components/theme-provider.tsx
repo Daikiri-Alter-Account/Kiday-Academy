@@ -1,8 +1,8 @@
-"use client";
-
 import { createContext, useContext, useEffect, useState } from "react";
 
 export type Theme = "dark" | "light" | "violet";
+
+const THEMES: Theme[] = ["dark", "light", "violet"];
 
 type ThemeContextValue = {
   theme: Theme;
@@ -11,15 +11,18 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
+function getSavedTheme(): Theme {
+  if (typeof window === "undefined") return "dark";
+  const savedTheme = window.localStorage.getItem("kiday-theme");
+  return THEMES.includes(savedTheme as Theme) ? (savedTheme as Theme) : "dark";
+}
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<Theme>("dark");
+  const [theme, setThemeState] = useState<Theme>(getSavedTheme);
 
   useEffect(() => {
-    const savedTheme = window.localStorage.getItem("kiday-theme");
-    if (savedTheme === "dark" || savedTheme === "light" || savedTheme === "violet") {
-      setThemeState(savedTheme);
-    }
-  }, []);
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   function setTheme(nextTheme: Theme) {
     setThemeState(nextTheme);
@@ -28,9 +31,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <ThemeContext.Provider value={{ theme, setTheme }}>
-      <div data-theme={theme} className="theme-shell min-h-screen">
-        {children}
-      </div>
+      <div className="theme-shell min-h-screen">{children}</div>
     </ThemeContext.Provider>
   );
 }

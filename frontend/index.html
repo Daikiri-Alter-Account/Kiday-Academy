@@ -6,6 +6,14 @@
     <meta name="theme-color" content="#080a12" />
     <meta name="description" content="Organiza tus materias, calcula tu promedio y aprende con inteligencia artificial en Kiday Studio." />
     <title>Kiday Studio | Estudia a tu manera</title>
+    <script>
+      try {
+        const theme = localStorage.getItem("kiday-theme");
+        document.documentElement.dataset.theme = ["dark", "light", "violet"].includes(theme) ? theme : "dark";
+      } catch {
+        document.documentElement.dataset.theme = "dark";
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>
