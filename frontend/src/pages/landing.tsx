@@ -42,6 +42,7 @@ export function LandingPage() {
             <a href="#planes" className="transition hover:text-[var(--foreground)]">Planes</a>
             <a href="#contacto" className="transition hover:text-[var(--foreground)]">Contacto</a>
             <Link to="/app" className="transition hover:text-[var(--foreground)]">Entrar</Link>
+            <Link to="/admin/login" className="transition hover:text-[var(--foreground)]">Admin</Link>
           </nav>
         </div>
       </footer>

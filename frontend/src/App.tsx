@@ -1,7 +1,13 @@
 import { useEffect } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
+import { ProtectedRoute } from "@/components/protected-route";
 import { ThemeProvider } from "@/components/theme-provider";
+import { AdminLayout } from "@/layouts/admin-layout";
 import { AppLayout } from "@/layouts/app-layout";
+import { AdminLoginPage } from "@/pages/admin-login";
+import { AdminMessagesPage } from "@/pages/admin-messages";
+import { AdminOverviewPage } from "@/pages/admin-overview";
+import { AdminServicesPage } from "@/pages/admin-services";
 import { AssistantPage } from "@/pages/assistant";
 import { AveragerPage } from "@/pages/averager";
 import { DashboardPage } from "@/pages/dashboard";
@@ -9,6 +15,7 @@ import { GroupsPage } from "@/pages/groups";
 import { LandingPage } from "@/pages/landing";
 import { NotFoundPage } from "@/pages/not-found";
 import { SubjectsPage } from "@/pages/subjects";
+import { AuthProvider } from "@/lib/auth-context";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -23,18 +30,28 @@ function ScrollToTop() {
 export function App() {
   return (
     <ThemeProvider>
-      <ScrollToTop />
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/app" element={<AppLayout />}>
-          <Route index element={<DashboardPage />} />
-          <Route path="materias" element={<SubjectsPage />} />
-          <Route path="grupos" element={<GroupsPage />} />
-          <Route path="promediador" element={<AveragerPage />} />
-          <Route path="asistente" element={<AssistantPage />} />
-        </Route>
-        <Route path="*" element={<NotFoundPage />} />
-      </Routes>
+      <AuthProvider>
+        <ScrollToTop />
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/app" element={<AppLayout />}>
+            <Route index element={<DashboardPage />} />
+            <Route path="materias" element={<SubjectsPage />} />
+            <Route path="grupos" element={<GroupsPage />} />
+            <Route path="promediador" element={<AveragerPage />} />
+            <Route path="asistente" element={<AssistantPage />} />
+          </Route>
+          <Route path="/admin/login" element={<AdminLoginPage />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<AdminOverviewPage />} />
+              <Route path="mensajes" element={<AdminMessagesPage />} />
+              <Route path="servicios" element={<AdminServicesPage />} />
+            </Route>
+          </Route>
+          <Route path="*" element={<NotFoundPage />} />
+        </Routes>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

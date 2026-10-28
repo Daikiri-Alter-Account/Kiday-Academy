@@ -17,6 +17,40 @@ export type Service = {
   highlighted: boolean;
   active: boolean;
   order: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type ServicePayload = {
+  name: string;
+  slug?: string;
+  tagline: string;
+  description: string;
+  price: number;
+  currency?: string;
+  period?: string | null;
+  features: string[];
+  highlighted?: boolean;
+  active?: boolean;
+  order?: number;
+};
+
+export type ContactMessage = {
+  id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  status: "nuevo" | "leido" | "respondido";
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AdminStats = {
+  messages: number;
+  newMessages: number;
+  services: number;
+  users: number;
 };
 
 export type ContactPayload = {
@@ -99,6 +133,38 @@ export const api = {
     }),
   me: () => apiRequest<{ user: AuthUser }>("/api/auth/me"),
   logout: () => apiRequest<void>("/api/auth/logout", { method: "POST" }),
+  chat: (messages: { role: "user" | "assistant"; content: string }[]) =>
+    apiRequest<{ reply: string }>("/api/ai/chat", {
+      method: "POST",
+      body: { messages },
+    }),
+  admin: {
+    stats: () => apiRequest<AdminStats>("/api/admin/stats"),
+    messages: (status?: ContactMessage["status"]) =>
+      apiRequest<{ messages: ContactMessage[] }>(
+        `/api/admin/messages${status ? `?status=${status}` : ""}`,
+      ),
+    updateMessage: (id: string, status: ContactMessage["status"]) =>
+      apiRequest<{ message: ContactMessage }>(`/api/admin/messages/${id}`, {
+        method: "PATCH",
+        body: { status },
+      }),
+    deleteMessage: (id: string) =>
+      apiRequest<void>(`/api/admin/messages/${id}`, { method: "DELETE" }),
+    services: () => apiRequest<{ services: Service[] }>("/api/admin/services"),
+    createService: (payload: ServicePayload) =>
+      apiRequest<{ service: Service }>("/api/admin/services", {
+        method: "POST",
+        body: payload,
+      }),
+    updateService: (id: string, payload: Partial<ServicePayload>) =>
+      apiRequest<{ service: Service }>(`/api/admin/services/${id}`, {
+        method: "PATCH",
+        body: payload,
+      }),
+    deleteService: (id: string) =>
+      apiRequest<void>(`/api/admin/services/${id}`, { method: "DELETE" }),
+  },
 };
 
 export function getToken() {
