@@ -15,7 +15,9 @@ import { GroupsPage } from "@/pages/groups";
 import { LandingPage } from "@/pages/landing";
 import { NotFoundPage } from "@/pages/not-found";
 import { SubjectsPage } from "@/pages/subjects";
+import { TasksPage } from "@/pages/tasks";
 import { AuthProvider } from "@/lib/auth-context";
+import { StudyProvider } from "@/lib/study-store";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -34,9 +36,17 @@ export function App() {
         <ScrollToTop />
         <Routes>
           <Route path="/" element={<LandingPage />} />
-          <Route path="/app" element={<AppLayout />}>
+          <Route
+            path="/app"
+            element={
+              <StudyProvider>
+                <AppLayout />
+              </StudyProvider>
+            }
+          >
             <Route index element={<DashboardPage />} />
             <Route path="materias" element={<SubjectsPage />} />
+            <Route path="tareas" element={<TasksPage />} />
             <Route path="grupos" element={<GroupsPage />} />
             <Route path="promediador" element={<AveragerPage />} />
             <Route path="asistente" element={<AssistantPage />} />

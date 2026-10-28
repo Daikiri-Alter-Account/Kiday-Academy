@@ -87,24 +87,6 @@ export const subjects: Subject[] = [
   },
 ];
 
-export type StatTone = "emerald" | "blue" | "amber";
-
-export const stats: { id: "average" | "hours" | "streak"; label: string; value: string; suffix: string; hint: string; tone: StatTone }[] = [
-  { id: "average", label: "Promedio actual", value: "4.2", suffix: "/ 5.0", hint: "↗ 0.3 este periodo", tone: "emerald" },
-  { id: "hours", label: "Horas de estudio", value: "12.5", suffix: "h", hint: "Esta semana", tone: "blue" },
-  { id: "streak", label: "Racha de estudio", value: "7", suffix: "días", hint: "¡Sigue así! 🔥", tone: "amber" },
-];
-
-export const week = [
-  { day: "L", hours: 2.4, height: 38 },
-  { day: "M", hours: 3.1, height: 58 },
-  { day: "X", hours: 2.7, height: 46 },
-  { day: "J", hours: 4.0, height: 78 },
-  { day: "V", hours: 3.2, height: 57 },
-  { day: "S", hours: 4.6, height: 88 },
-  { day: "D", hours: 1.5, height: 30 },
-];
-
 export type StudyGroup = {
   id: string;
   name: string;
