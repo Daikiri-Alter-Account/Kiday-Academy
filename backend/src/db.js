@@ -1,0 +1,44 @@
+import { MongoClient } from "mongodb";
+import { config } from "./config.js";
+
+let client = null;
+let database = null;
+
+export async function connectDatabase(uri = config.mongoUrl, name = config.mongoDb) {
+  if (database) return database;
+  if (!uri) {
+    throw new Error("Falta MONGO_URL. Configura la cadena de conexión de MongoDB Atlas.");
+  }
+
+  client = new MongoClient(uri, { serverSelectionTimeoutMS: 10000 });
+  await client.connect();
+  database = client.db(name);
+  await ensureIndexes(database);
+  return database;
+}
+
+export async function closeDatabase() {
+  if (client) await client.close();
+  client = null;
+  database = null;
+}
+
+export function getDb() {
+  if (!database) throw new Error("La base de datos no está conectada.");
+  return database;
+}
+
+export async function pingDatabase() {
+  await getDb().command({ ping: 1 });
+}
+
+async function ensureIndexes(db) {
+  await Promise.all([
+    db.collection("users").createIndex({ email: 1 }, { unique: true }),
+    db.collection("sessions").createIndex({ tokenHash: 1 }, { unique: true }),
+    db.collection("sessions").createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 }),
+    db.collection("services").createIndex({ slug: 1 }, { unique: true }),
+    db.collection("services").createIndex({ active: 1, order: 1 }),
+    db.collection("messages").createIndex({ createdAt: -1 }),
+  ]);
+}

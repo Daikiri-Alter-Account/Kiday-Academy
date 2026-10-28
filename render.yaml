@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: kiday-academy-api
+    runtime: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: MONGO_URL
+        sync: false
+      - key: MONGO_DB
+        value: kiday_academy
+      - key: CORS_ORIGIN
+        sync: false
+      - key: ADMIN_NAME
+        value: Administrador Kiday
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: AI_API_URL
+        sync: false
+      - key: AI_API_KEY
+        sync: false
+      - key: AI_MODEL
+        sync: false
