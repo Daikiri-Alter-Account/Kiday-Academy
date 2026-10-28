@@ -2,7 +2,8 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { fileURLToPath } from "node:url";
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
+  base: mode === "production" ? "/Kiday-Academy/" : "/",
   plugins: [react()],
   resolve: {
     alias: {
@@ -12,4 +13,4 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
   },
-});
+}));
