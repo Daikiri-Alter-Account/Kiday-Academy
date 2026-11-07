@@ -1,12 +1,15 @@
 # Base de datos de Kiday Academy
 
-Kiday Academy usa MongoDB con la base `kiday_academy`. La estructura es intencionalmente pequeña: cuatro colecciones y una relación principal entre usuarios y sesiones.
+Kiday Academy usa MongoDB con la base `kiday_academy`. La estructura es intencionalmente pequeña: seis colecciones, con relaciones claras entre usuarios, sesiones, materias y tareas.
 
 ## Mapa rápido
 
 ```mermaid
 erDiagram
     USERS ||--o{ SESSIONS : "tiene"
+    USERS ||--o{ SUBJECTS : "crea"
+    USERS ||--o{ TASKS : "crea"
+    SUBJECTS ||--o{ TASKS : "agrupa"
     USERS {
         ObjectId _id
         string name
@@ -22,6 +25,31 @@ erDiagram
         string tokenHash
         Date createdAt
         Date expiresAt
+    }
+    SUBJECTS {
+        ObjectId _id
+        ObjectId userId
+        string name
+        string detail
+        string icon
+        string color
+        number average
+        number completed
+        number total
+        string status
+        Date createdAt
+        Date updatedAt
+    }
+    TASKS {
+        ObjectId _id
+        ObjectId userId
+        ObjectId subjectId
+        string title
+        string dueDate
+        string priority
+        boolean done
+        Date createdAt
+        Date updatedAt
     }
     SERVICES {
         ObjectId _id
@@ -43,7 +71,7 @@ erDiagram
     }
 ```
 
-`SERVICES` y `MESSAGES` no dependen de `USERS`; son datos públicos del catálogo y del formulario de contacto.
+`SERVICES` y `MESSAGES` no dependen de `USERS`; son datos públicos del catálogo y del formulario de contacto. `SUBJECTS` y `TASKS` siempre pertenecen a un usuario y se consultan filtrando por `userId`.
 
 ## Colecciones
 
@@ -96,6 +124,76 @@ Ejemplo:
   "tokenHash": "hash-sha-256",
   "createdAt": "2026-10-27T20:05:00.000Z",
   "expiresAt": "2026-11-03T20:05:00.000Z"
+}
+```
+
+### `subjects`: materias del estudiante
+
+Cada materia pertenece a una cuenta. El dashboard, la página de materias y las tareas consumen estos documentos a través de la API protegida.
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `_id` | ObjectId | Identificador de la materia. |
+| `userId` | ObjectId | Referencia a `users._id`. Aísla los datos entre estudiantes. |
+| `name` | string | Nombre de la materia. |
+| `detail` | string | Detalle corto, por ejemplo `Parcial 1`. |
+| `icon` | string | Iniciales para la interfaz, por ejemplo `AL`. |
+| `color` | string | Gradiente de Tailwind usado en la tarjeta. |
+| `average` | number | Promedio entre `0` y `5`, redondeado a un decimal. |
+| `completed` | number | Actividades completadas. |
+| `total` | number | Total de actividades. |
+| `status` | string | `al-dia`, `pendiente` o `atrasada`. |
+| `createdAt` | Date | Fecha de creación. |
+| `updatedAt` | Date | Última edición. |
+
+Ejemplo:
+
+```json
+{
+  "_id": "665f206e9f1b2c0012345682",
+  "userId": "665f1c2a9f1b2c0012345678",
+  "name": "Álgebra lineal",
+  "detail": "Parcial 1",
+  "icon": "AL",
+  "color": "from-violet-500 to-indigo-500",
+  "average": 4.2,
+  "completed": 1,
+  "total": 3,
+  "status": "al-dia",
+  "createdAt": "2026-10-27T20:20:00.000Z",
+  "updatedAt": "2026-10-27T20:20:00.000Z"
+}
+```
+
+### `tasks`: tareas y recordatorios
+
+Cada tarea pertenece a un usuario y puede estar asociada a una materia. Si se elimina la materia, la API elimina también sus tareas para mantener la coherencia.
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `_id` | ObjectId | Identificador de la tarea. |
+| `userId` | ObjectId | Referencia a `users._id`. |
+| `subjectId` | ObjectId o null | Referencia opcional a `subjects._id`. |
+| `title` | string | Descripción de la tarea. |
+| `dueDate` | string | Fecha límite en formato `AAAA-MM-DD`. |
+| `priority` | string | `alta`, `media` o `baja`. |
+| `done` | boolean | Si la tarea está completada. |
+| `createdAt` | Date | Fecha de creación. |
+| `updatedAt` | Date | Última edición. |
+
+Ejemplo:
+
+```json
+{
+  "_id": "665f217f9f1b2c0012345683",
+  "userId": "665f1c2a9f1b2c0012345678",
+  "subjectId": "665f206e9f1b2c0012345682",
+  "title": "Resolver taller de matrices",
+  "dueDate": "2026-12-01",
+  "priority": "alta",
+  "done": false,
+  "createdAt": "2026-10-27T20:25:00.000Z",
+  "updatedAt": "2026-10-27T20:25:00.000Z"
 }
 ```
 
@@ -182,6 +280,10 @@ La colección puede verse vacía hasta que alguien envíe el formulario de conta
 | `sessions` | `tokenHash` único | Buscar una sesión por token. |
 | `sessions` | `expiresAt` TTL | Borrar sesiones vencidas automáticamente. |
 | `sessions` | `userId` | Encontrar o limpiar las sesiones de un usuario. |
+| `subjects` | `userId + createdAt` | Cargar las materias de un estudiante en orden. |
+| `tasks` | `userId + dueDate` | Cargar las tareas de un estudiante por fecha. |
+| `tasks` | `userId + done` | Separar pendientes de completadas. |
+| `tasks` | `userId + subjectId` | Encontrar y eliminar las tareas de una materia. |
 | `services` | `slug` único | Evitar planes duplicados. |
 | `services` | `active + order` | Cargar el catálogo en el orden correcto. |
 | `messages` | `createdAt` descendente | Mostrar primero los mensajes recientes. |
@@ -189,16 +291,31 @@ La colección puede verse vacía hasta que alguien envíe el formulario de conta
 
 Los índices se crean automáticamente al iniciar la API mediante `ensureIndexes()` en `backend/src/db.js`.
 
+## Sincronización del espacio académico
+
+Las materias y tareas ya no son la fuente de verdad del navegador. El flujo es:
+
+1. El estudiante inicia sesión y recibe un token.
+2. El frontend llama a `GET /api/workspace` con `Authorization: Bearer <token>`.
+3. La API filtra `subjects` y `tasks` por el `userId` de la sesión.
+4. Cada creación, edición o eliminación se guarda en MongoDB y actualiza la interfaz.
+5. El navegador conserva una copia `kiday-study-workspace-v2:<id>` solo como caché para mostrar datos mientras sincroniza.
+
+La API nunca acepta `userId` desde el cliente: lo obtiene de la sesión. Por eso un estudiante no puede leer ni modificar materias de otra cuenta.
+
+### Migración desde la versión local
+
+La versión anterior guardaba todo en `kiday-study-workspace-v1`. Para no perder esos datos:
+
+- Si la cuenta no tiene materias ni tareas en MongoDB, el frontend intenta importar el caché local con `POST /api/workspace/import`.
+- La importación conserva los identificadores locales para relacionar materias y tareas.
+- Después de importar, se marca `kiday-study-workspace-v2-migrated:<id>` para no repetir el proceso.
+- Si la cuenta ya tiene datos en MongoDB, el servidor manda y no se importa nada encima.
+- El usuario puede seguir usando la app aunque falle la importación; verá un aviso y podrá reintentar.
+
 ## Qué no está en MongoDB
 
-Las materias y tareas del panel de estudiante se guardan en `localStorage`, separadas por usuario con una clave como `kiday-study-workspace-v1:<id>`. No se envían a MongoDB todavía. El chat de IA tampoco se almacena.
-
-Esto significa que:
-
-- El catálogo, las cuentas, las sesiones y el contacto sí son datos reales del backend.
-- Las materias y tareas son datos locales del navegador.
-- Si se borra el almacenamiento del navegador, se pierden esas materias y tareas.
-- Para sincronizarlas entre dispositivos habría que crear colecciones `subjects` y `tasks` y endpoints protegidos.
+El historial del chat de IA no se almacena. Las conversaciones viven únicamente en el estado de la página del asistente. El catálogo, las cuentas, las sesiones, el contacto, las materias y las tareas sí son datos reales del backend.
 
 ## Cómo inspeccionarla
 
@@ -228,22 +345,8 @@ El comando muestra la base, cada colección, su propósito, cantidad de document
 
 - No edites `passwordHash` ni `tokenHash` manualmente. Usa el registro, el login o el seed.
 - No cambies el `slug` de un plan sin revisar enlaces o referencias.
-- No elimines un usuario sin borrar también sus sesiones; aunque la API las invalida al no encontrar el usuario, es más limpio limpiarlas.
+- No elimines un usuario sin borrar también sus sesiones, materias y tareas.
 - Usa el panel administrativo para editar planes y mensajes.
+- Usa la API para modificar materias y tareas; así se respetan las validaciones y la separación por usuario.
 - `npm run seed` es idempotente para los planes y no duplica el administrador existente.
 - Si necesitas reiniciar datos de prueba, elimina primero los documentos y vuelve a ejecutar el seed.
-
-## Estructura recomendada a futuro
-
-Si el proyecto crece, el siguiente paso natural es:
-
-```text
-users
-sessions
-services
-messages
-subjects       # materias por usuario
-tasks          # tareas por usuario
-```
-
-Con relaciones `subjects.userId -> users._id` y `tasks.userId -> users._id`, además de `tasks.subjectId -> subjects._id`. Eso permitiría sincronizar el espacio académico entre dispositivos sin cambiar el modelo actual de autenticación.

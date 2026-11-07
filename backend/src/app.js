@@ -9,6 +9,7 @@ import { aiRouter } from "./routes/ai.js";
 import { authRouter } from "./routes/auth.js";
 import { contactRouter } from "./routes/contact.js";
 import { servicesRouter } from "./routes/services.js";
+import { workspaceRouter } from "./routes/workspace.js";
 
 export function createApp() {
   const app = express();
@@ -37,6 +38,7 @@ export function createApp() {
   app.use("/api/services", servicesRouter);
   app.use("/api/contact", contactRouter);
   app.use("/api/ai", aiRouter);
+  app.use("/api/workspace", authenticate, workspaceRouter);
   app.use("/api/admin", authenticate, requireAdmin, adminRouter);
 
   app.use(notFound);

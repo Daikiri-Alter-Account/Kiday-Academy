@@ -8,8 +8,10 @@ import {
   GraduationCap,
   LayoutDashboard,
   ListTodo,
+  Loader2,
   LogOut,
   Menu,
+  RefreshCw,
   Sparkles,
   UsersRound,
   X,
@@ -18,6 +20,7 @@ import { Brand } from "@/components/brand";
 import { SkipLink } from "@/components/skip-link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/lib/auth-context";
+import { useStudy } from "@/lib/study-store";
 
 const primaryLinks = [
   { label: "Panel principal", to: "/app", icon: LayoutDashboard, end: true },
@@ -106,6 +109,7 @@ function initials(name: string) {
 
 export function AppLayout() {
   const { user, logout } = useAuth();
+  const { status: workspaceStatus, error: workspaceError, reload } = useStudy();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
@@ -197,6 +201,26 @@ export function AppLayout() {
         </header>
 
         <main id="contenido-app" tabIndex={-1} className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          {workspaceStatus === "error" && (
+            <div role="alert" className="mb-5 flex flex-col gap-3 rounded-xl border border-rose-400/20 bg-rose-500/[0.08] px-4 py-3 text-sm sm:flex-row sm:items-center">
+              <div className="min-w-0 flex-1">
+                <p className="font-medium text-rose-200">No pudimos sincronizar tu espacio</p>
+                <p className="mt-0.5 text-xs text-rose-200/70">{workspaceError}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => void reload()}
+                className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg border border-rose-300/20 px-3 py-1.5 text-xs font-medium text-rose-100 transition hover:bg-rose-400/10"
+              >
+                <RefreshCw size={13} /> Reintentar
+              </button>
+            </div>
+          )}
+          {workspaceStatus === "loading" && (
+            <div role="status" className="mb-4 flex items-center gap-2 text-xs text-[var(--muted)]">
+              <Loader2 size={13} className="animate-spin" /> Sincronizando tu espacio...
+            </div>
+          )}
           <Outlet />
         </main>
       </div>

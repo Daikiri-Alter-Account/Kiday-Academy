@@ -87,6 +87,67 @@ try {
   assert.equal(studentMe.status, 200);
   assert.equal(studentMe.data.user.email, "estudiante@kiday.test");
 
+  const workspaceUnauthorized = await request("/api/workspace");
+  assert.equal(workspaceUnauthorized.status, 401);
+
+  const emptyWorkspace = await request("/api/workspace", { token: register.data.token });
+  assert.equal(emptyWorkspace.status, 200);
+  assert.equal(emptyWorkspace.data.subjects.length, 0);
+  assert.equal(emptyWorkspace.data.tasks.length, 0);
+
+  const createdSubject = await request("/api/workspace/subjects", {
+    method: "POST",
+    token: register.data.token,
+    body: {
+      name: "Álgebra lineal",
+      detail: "Parcial 1",
+      average: 4.2,
+      completed: 1,
+      total: 3,
+      status: "al-dia",
+    },
+  });
+  assert.equal(createdSubject.status, 201);
+  assert.equal(createdSubject.data.subject.name, "Álgebra lineal");
+  assert.ok(createdSubject.data.subject.id);
+
+  const createdTask = await request("/api/workspace/tasks", {
+    method: "POST",
+    token: register.data.token,
+    body: {
+      title: "Resolver taller de matrices",
+      subjectId: createdSubject.data.subject.id,
+      dueDate: "2026-12-01",
+      priority: "alta",
+    },
+  });
+  assert.equal(createdTask.status, 201);
+  assert.equal(createdTask.data.task.subjectId, createdSubject.data.subject.id);
+
+  const populatedWorkspace = await request("/api/workspace", { token: register.data.token });
+  assert.equal(populatedWorkspace.data.subjects.length, 1);
+  assert.equal(populatedWorkspace.data.tasks.length, 1);
+
+  const updatedSubject = await request(
+    `/api/workspace/subjects/${createdSubject.data.subject.id}`,
+    {
+      method: "PATCH",
+      token: register.data.token,
+      body: { average: 4.8, completed: 2 },
+    },
+  );
+  assert.equal(updatedSubject.status, 200);
+  assert.equal(updatedSubject.data.subject.average, 4.8);
+  assert.equal(updatedSubject.data.subject.completed, 2);
+
+  const updatedTask = await request(`/api/workspace/tasks/${createdTask.data.task.id}`, {
+    method: "PATCH",
+    token: register.data.token,
+    body: { done: true },
+  });
+  assert.equal(updatedTask.status, 200);
+  assert.equal(updatedTask.data.task.done, true);
+
   const duplicateRegister = await request("/api/auth/register", {
     method: "POST",
     body: {
@@ -131,6 +192,107 @@ try {
   assert.equal(stats.data.newMessages, 1);
   assert.equal(stats.data.students, 1);
 
+  const secondRegister = await request("/api/auth/register", {
+    method: "POST",
+    body: {
+      name: "Segundo estudiante",
+      email: "estudiante2@kiday.test",
+      password: "clave-estudiante-456",
+    },
+  });
+  assert.equal(secondRegister.status, 201);
+
+  const secondWorkspace = await request("/api/workspace", {
+    token: secondRegister.data.token,
+  });
+  assert.equal(secondWorkspace.data.subjects.length, 0);
+  assert.equal(secondWorkspace.data.tasks.length, 0);
+
+  const crossSubjectUpdate = await request(
+    `/api/workspace/subjects/${createdSubject.data.subject.id}`,
+    {
+      method: "PATCH",
+      token: secondRegister.data.token,
+      body: { average: 1 },
+    },
+  );
+  assert.equal(crossSubjectUpdate.status, 404);
+
+  const crossTaskCreate = await request("/api/workspace/tasks", {
+    method: "POST",
+    token: secondRegister.data.token,
+    body: {
+      title: "Tarea ajena",
+      subjectId: createdSubject.data.subject.id,
+      dueDate: "2026-12-02",
+      priority: "media",
+    },
+  });
+  assert.equal(crossTaskCreate.status, 400);
+
+  const imported = await request("/api/workspace/import", {
+    method: "POST",
+    token: secondRegister.data.token,
+    body: {
+      subjects: [
+        {
+          id: "legacy-subject",
+          name: "Materia importada",
+          detail: "Desde el navegador",
+          average: 3.5,
+          completed: 1,
+          total: 4,
+          status: "pendiente",
+        },
+      ],
+      tasks: [
+        {
+          id: "legacy-task",
+          title: "Tarea importada",
+          subjectId: "legacy-subject",
+          dueDate: "2026-12-03",
+          priority: "baja",
+          done: false,
+        },
+      ],
+    },
+  });
+  assert.equal(imported.status, 201);
+  assert.equal(imported.data.subjects.length, 1);
+  assert.equal(imported.data.tasks.length, 1);
+  assert.equal(imported.data.tasks[0].subjectId, imported.data.subjects[0].id);
+
+  const deletedSubject = await request(
+    `/api/workspace/subjects/${createdSubject.data.subject.id}`,
+    { method: "DELETE", token: register.data.token },
+  );
+  assert.equal(deletedSubject.status, 204);
+
+  const workspaceAfterDelete = await request("/api/workspace", {
+    token: register.data.token,
+  });
+  assert.equal(workspaceAfterDelete.data.subjects.length, 0);
+  assert.equal(workspaceAfterDelete.data.tasks.length, 0);
+
+  const standaloneTask = await request("/api/workspace/tasks", {
+    method: "POST",
+    token: register.data.token,
+    body: {
+      title: "Tarea sin materia",
+      subjectId: null,
+      dueDate: "2026-12-04",
+      priority: "baja",
+    },
+  });
+  assert.equal(standaloneTask.status, 201);
+  assert.equal(standaloneTask.data.task.subjectId, null);
+
+  const deletedTask = await request(`/api/workspace/tasks/${standaloneTask.data.task.id}`, {
+    method: "DELETE",
+    token: register.data.token,
+  });
+  assert.equal(deletedTask.status, 204);
+
   const created = await request("/api/admin/services", {
     method: "POST",
     token,
@@ -171,7 +333,7 @@ try {
   const expired = await request("/api/auth/me", { token });
   assert.equal(expired.status, 401);
 
-  console.log("Smoke test de la API: OK (catálogo, contacto, auth y admin).");
+  console.log("Smoke test de la API: OK (catálogo, contacto, auth, admin y espacio académico).");
 } finally {
   if (server) {
     await new Promise((resolve) => server.close(resolve));

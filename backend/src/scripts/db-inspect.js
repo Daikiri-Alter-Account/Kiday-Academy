@@ -4,6 +4,8 @@ import { closeDatabase, connectDatabase, getDb } from "../db.js";
 const descriptions = {
   users: "Cuentas de estudiantes y administradores. El campo role define el acceso.",
   sessions: "Sesiones activas. Guarda hashes de tokens, nunca el token original.",
+  subjects: "Materias de cada estudiante. Se aíslan por userId.",
+  tasks: "Tareas de cada estudiante, asociadas opcionalmente a una materia.",
   services: "Planes del catálogo que se muestran en la landing y se editan en el admin.",
   messages: "Mensajes enviados desde el formulario de contacto.",
 };
@@ -109,9 +111,12 @@ try {
 
   console.log("Relaciones principales:");
   console.log("  - sessions.userId -> users._id");
+  console.log("  - subjects.userId -> users._id");
+  console.log("  - tasks.userId -> users._id");
+  console.log("  - tasks.subjectId -> subjects._id (opcional)");
   console.log("  - users.role: admin | student");
   console.log("  - services y messages son colecciones independientes.\n");
-  console.log("Las materias y tareas del panel se guardan en localStorage por usuario, no en MongoDB.\n");
+  console.log("Las materias y tareas se guardan en MongoDB y se aíslan por userId.\n");
 } catch (error) {
   console.error("No pudimos inspeccionar la base de datos:", error.message);
   process.exitCode = 1;

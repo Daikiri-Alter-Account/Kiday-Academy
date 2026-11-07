@@ -43,5 +43,9 @@ async function ensureIndexes(db) {
     db.collection("services").createIndex({ active: 1, order: 1 }),
     db.collection("messages").createIndex({ createdAt: -1 }),
     db.collection("messages").createIndex({ status: 1, createdAt: -1 }),
+    db.collection("subjects").createIndex({ userId: 1, createdAt: 1 }),
+    db.collection("tasks").createIndex({ userId: 1, dueDate: 1 }),
+    db.collection("tasks").createIndex({ userId: 1, done: 1 }),
+    db.collection("tasks").createIndex({ userId: 1, subjectId: 1 }),
   ]);
 }

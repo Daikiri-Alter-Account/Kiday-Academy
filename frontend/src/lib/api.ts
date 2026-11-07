@@ -1,3 +1,5 @@
+import type { Subject, SubjectStatus } from "@/data/mock";
+
 const configuredUrl = import.meta.env.VITE_API_URL?.trim();
 
 export const API_URL = (configuredUrl || "http://localhost:4000").replace(/\/+$/, "");
@@ -80,6 +82,43 @@ export type RegisterPayload = {
   password: string;
 };
 
+export type TaskPriority = "alta" | "media" | "baja";
+
+export type WorkspaceTask = {
+  id: string;
+  title: string;
+  subjectId: string | null;
+  dueDate: string;
+  priority: TaskPriority;
+  done: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type Workspace = {
+  subjects: Subject[];
+  tasks: WorkspaceTask[];
+};
+
+export type SubjectInput = {
+  name: string;
+  detail: string;
+  icon?: string;
+  color?: string;
+  average: number;
+  completed: number;
+  total: number;
+  status: SubjectStatus;
+};
+
+export type TaskInput = {
+  title: string;
+  subjectId: string | null;
+  dueDate: string;
+  priority: TaskPriority;
+  done?: boolean;
+};
+
 export class ApiError extends Error {
   status: number;
 
@@ -150,6 +189,38 @@ export const api = {
       method: "POST",
       body: { messages },
     }),
+  workspace: {
+    get: () => apiRequest<Workspace>("/api/workspace"),
+    importWorkspace: (payload: { subjects: Subject[]; tasks: WorkspaceTask[] }) =>
+      apiRequest<Workspace>("/api/workspace/import", {
+        method: "POST",
+        body: payload,
+      }),
+    createSubject: (payload: SubjectInput) =>
+      apiRequest<{ subject: Subject }>("/api/workspace/subjects", {
+        method: "POST",
+        body: payload,
+      }),
+    updateSubject: (id: string, payload: Partial<SubjectInput>) =>
+      apiRequest<{ subject: Subject }>(`/api/workspace/subjects/${id}`, {
+        method: "PATCH",
+        body: payload,
+      }),
+    deleteSubject: (id: string) =>
+      apiRequest<void>(`/api/workspace/subjects/${id}`, { method: "DELETE" }),
+    createTask: (payload: TaskInput) =>
+      apiRequest<{ task: WorkspaceTask }>("/api/workspace/tasks", {
+        method: "POST",
+        body: payload,
+      }),
+    updateTask: (id: string, payload: Partial<TaskInput>) =>
+      apiRequest<{ task: WorkspaceTask }>(`/api/workspace/tasks/${id}`, {
+        method: "PATCH",
+        body: payload,
+      }),
+    deleteTask: (id: string) =>
+      apiRequest<void>(`/api/workspace/tasks/${id}`, { method: "DELETE" }),
+  },
   admin: {
     stats: () => apiRequest<AdminStats>("/api/admin/stats"),
     messages: (status?: ContactMessage["status"]) =>

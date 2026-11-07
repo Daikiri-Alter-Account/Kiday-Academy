@@ -6,7 +6,7 @@ Plataforma web para estudiantes de colegio, universidad y aprendizaje autónomo.
 
 Proyecto final del curso de desarrollo web avanzado. Frontend y backend están separados y se despliegan de forma independiente.
 
-- **Frontend publicado:** https://daikiri-alter-account.github.io/Kiday-Academy/
+- **Frontend:** pendiente de publicar; el workflow de GitHub Pages está listo.
 - **Repositorio:** https://github.com/Daikiri-Alter-Account/Kiday-Academy
 - **API:** pendiente de desplegar en Render (configuración lista en `render.yaml`).
 
@@ -24,7 +24,7 @@ Proyecto final del curso de desarrollo web avanzado. Frontend y backend están s
 - Tareas y recordatorios con fecha de entrega, prioridad, filtros, tareas atrasadas y vista de los próximos siete días.
 - Promediador ponderado funcional, con cálculo en vivo y validaciones.
 - Registro e inicio de sesión de estudiantes con correo y contraseña.
-- Espacio académico local por usuario: cada cuenta conserva sus materias y tareas en su propio navegador.
+- Espacio académico persistente: materias y tareas se guardan en MongoDB y se aíslan por cuenta; el navegador solo conserva una caché para cargar más rápido.
 - Asistente Kiday IA conectado a un proveedor compatible con OpenAI. El backend inyecta el catálogo vigente en el prompt para que las recomendaciones sean reales.
 - Rutas de la aplicación y del panel administrativo protegidas, con fallback de SPA para GitHub Pages.
 
@@ -61,9 +61,9 @@ No se usan librerías de UI, estado global ni autenticación de terceros. La aut
 ├── backend/                  # API Express
 │   └── src/
 │       ├── lib/              # auth, validación, rate limit, errores
-│       ├── routes/           # services, contact, auth, admin, ai
+│       ├── routes/           # services, contact, auth, admin, ai, workspace
 │       ├── scripts/          # seed, smoke test e inspector de base de datos
-│       └── seed.js           # datos iniciales e índices
+│       └── seed.js           # datos iniciales
 ├── docs/                     # documentación de la base de datos
 ├── scripts/dev.mjs           # arranca API y frontend juntos
 ├── package.json              # comandos raíz: dev, test, build, db:inspect
@@ -152,7 +152,7 @@ npm run dev
 
 Abre `http://localhost:5173`. Si no defines `VITE_API_URL`, el cliente usa `http://localhost:4000`.
 
-Abre `http://localhost:5173/registro` para crear una cuenta de estudiante o `http://localhost:5173/login` para iniciar sesión. Las materias y tareas se guardan en el navegador con una clave por usuario, por ejemplo `kiday-study-workspace-v1:<id>`. El catálogo, las cuentas, el contacto, el admin y la IA usan la API y MongoDB.
+Abre `http://localhost:5173/registro` para crear una cuenta de estudiante o `http://localhost:5173/login` para iniciar sesión. Las materias y tareas se guardan en MongoDB por usuario; el navegador conserva una caché `kiday-study-workspace-v2:<id>` y migra automáticamente los datos antiguos de `kiday-study-workspace-v1` cuando la cuenta todavía no tiene información en el servidor.
 
 ### 3. Panel administrativo
 
@@ -174,7 +174,7 @@ cd backend
 npm test
 ```
 
-El smoke test levanta una MongoDB en memoria, siembra datos y verifica catálogo, contacto, registro de estudiantes, login, sesiones, permisos, estadísticas, mensajes, CRUD de servicios, IA no configurada y cierre de sesión. La primera ejecución descarga el binario de MongoDB y puede tardar unos minutos.
+El smoke test levanta una MongoDB en memoria, siembra datos y verifica catálogo, contacto, registro de estudiantes, login, sesiones, permisos, estadísticas, mensajes, CRUD de servicios, CRUD e importación del espacio académico, aislamiento entre estudiantes, IA no configurada y cierre de sesión. La primera ejecución descarga el binario de MongoDB y puede tardar unos minutos.
 
 Compilación del frontend:
 
@@ -221,6 +221,14 @@ GitHub Actions ejecuta el workflow **CI** en cada push y pull request: levanta l
 | POST | `/api/auth/login` | Público con rate limit | Inicia sesión y devuelve token. |
 | GET | `/api/auth/me` | Sesión | Devuelve el usuario autenticado. |
 | POST | `/api/auth/logout` | Sesión | Invalida la sesión. |
+| GET | `/api/workspace` | Sesión | Devuelve las materias y tareas del estudiante. |
+| POST | `/api/workspace/import` | Sesión | Migra un espacio local si la cuenta aún no tiene datos. |
+| POST | `/api/workspace/subjects` | Sesión | Crea una materia. |
+| PATCH | `/api/workspace/subjects/:id` | Sesión | Actualiza una materia propia. |
+| DELETE | `/api/workspace/subjects/:id` | Sesión | Elimina una materia propia y sus tareas. |
+| POST | `/api/workspace/tasks` | Sesión | Crea una tarea propia. |
+| PATCH | `/api/workspace/tasks/:id` | Sesión | Actualiza una tarea propia. |
+| DELETE | `/api/workspace/tasks/:id` | Sesión | Elimina una tarea propia. |
 | GET | `/api/admin/stats` | Admin | Métricas del panel. |
 | GET | `/api/admin/messages` | Admin | Lista mensajes; filtro `?status=nuevo`. |
 | PATCH | `/api/admin/messages/:id` | Admin | Cambia el estado del mensaje. |
@@ -273,12 +281,12 @@ npm run seed
 - El endpoint de IA no requiere sesión para que el asistente sea accesible desde la demo, pero está limitado a 20 solicitudes cada 10 minutos por IP y a 700 tokens de salida.
 - Las claves de Mongo, admin e IA viven únicamente en variables de entorno del backend.
 - Los estudiantes solo acceden a `/app`; las rutas `/api/admin/*` exigen rol `admin`.
+- Las rutas `/api/workspace/*` obtienen el `userId` de la sesión y nunca aceptan un usuario enviado por el cliente, por lo que no permiten leer ni modificar datos de otra cuenta.
 
 Para una siguiente etapa se recomienda migrar el token a cookies `HttpOnly`, agregar verificación de email y limitar el chat a usuarios autenticados.
 
 ## Roadmap
 
-- Sincronización de materias, notas y tareas entre dispositivos.
 - Calendario completo con vista mensual, recordatorios por email o push y notificaciones.
 - Comunidades por materia y chats privados.
 - Biblioteca de materiales de estudio.
