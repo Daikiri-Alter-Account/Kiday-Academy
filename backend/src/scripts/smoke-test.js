@@ -74,18 +74,34 @@ try {
   const register = await request("/api/auth/register", {
     method: "POST",
     body: {
-      name: "Estudiante de prueba",
+      firstName: "Estudiante",
+      lastName: "De Prueba",
+      birthDate: "2005-05-15",
+      institution: "Colegio Kiday",
+      grade: "11.º",
       email: "estudiante@kiday.test",
       password: "clave-estudiante-123",
     },
   });
   assert.equal(register.status, 201);
   assert.equal(register.data.user.role, "student");
+  assert.equal(register.data.user.name, "Estudiante De Prueba");
+  assert.equal(register.data.user.firstName, "Estudiante");
+  assert.equal(register.data.user.lastName, "De Prueba");
+  assert.equal(register.data.user.birthDate, "2005-05-15");
+  assert.ok(register.data.user.age >= 20);
+  assert.equal(register.data.user.institution, "Colegio Kiday");
+  assert.equal(register.data.user.grade, "11.º");
+  assert.equal(register.data.user.plan, "kiday-free");
+  assert.ok(register.data.user.capabilities.includes("tasks"));
+  assert.equal(register.data.user.capabilities.includes("groups"), false);
   assert.ok(register.data.token);
 
   const studentMe = await request("/api/auth/me", { token: register.data.token });
   assert.equal(studentMe.status, 200);
   assert.equal(studentMe.data.user.email, "estudiante@kiday.test");
+  assert.equal(studentMe.data.user.firstName, "Estudiante");
+  assert.equal(studentMe.data.user.plan, "kiday-free");
 
   const workspaceUnauthorized = await request("/api/workspace");
   assert.equal(workspaceUnauthorized.status, 401);
@@ -151,12 +167,26 @@ try {
   const duplicateRegister = await request("/api/auth/register", {
     method: "POST",
     body: {
-      name: "Otra persona",
+      firstName: "Otra",
+      lastName: "Persona",
+      birthDate: "2004-03-20",
       email: "estudiante@kiday.test",
       password: "otra-clave-123",
     },
   });
   assert.equal(duplicateRegister.status, 409);
+
+  const invalidBirthDate = await request("/api/auth/register", {
+    method: "POST",
+    body: {
+      firstName: "Fecha",
+      lastName: "Inválida",
+      birthDate: "2030-01-01",
+      email: "fecha-invalida@kiday.test",
+      password: "clave-invalida-123",
+    },
+  });
+  assert.equal(invalidBirthDate.status, 400);
 
   const studentAdminAccess = await request("/api/admin/messages", {
     token: register.data.token,
@@ -175,6 +205,8 @@ try {
   });
   assert.equal(login.status, 200);
   assert.equal(login.data.user.role, "admin");
+  assert.equal(login.data.user.plan, null);
+  assert.deepEqual(login.data.user.capabilities, []);
   const token = login.data.token;
   assert.ok(token);
 
@@ -195,7 +227,9 @@ try {
   const secondRegister = await request("/api/auth/register", {
     method: "POST",
     body: {
-      name: "Segundo estudiante",
+      firstName: "Segundo",
+      lastName: "Estudiante",
+      birthDate: "2006-09-10",
       email: "estudiante2@kiday.test",
       password: "clave-estudiante-456",
     },

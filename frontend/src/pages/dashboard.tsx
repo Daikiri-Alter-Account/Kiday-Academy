@@ -10,6 +10,8 @@ import {
   Sparkles,
 } from "lucide-react";
 import { statusMeta } from "@/data/mock";
+import { useAuth } from "@/lib/auth-context";
+import { useGreeting } from "@/lib/greeting";
 import { dueInfo, todayIso, useStudy } from "@/lib/study-store";
 
 const dateLabel = new Intl.DateTimeFormat("es-CO", {
@@ -28,6 +30,9 @@ const statTones = {
 } as const;
 
 export function DashboardPage() {
+  const { user } = useAuth();
+  const greeting = useGreeting();
+  const firstName = user?.firstName?.trim() || user?.name?.split(/\s+/)[0] || "estudiante";
   const { subjects, tasks, toggleTask, addTask } = useStudy();
 
   const pendingTasks = tasks
@@ -91,7 +96,9 @@ export function DashboardPage() {
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <p className="text-xs text-[var(--muted)]">{dateLabel}</p>
-          <h2 className="mt-1 text-2xl font-semibold tracking-tight">¡Hola, estudiante!</h2>
+          <h2 className="mt-1 text-2xl font-semibold tracking-tight">
+            {greeting}, {firstName} <span aria-hidden="true">👋</span>
+          </h2>
           <p className="mt-1 text-sm text-[var(--muted)]">Este es tu resumen para hoy.</p>
         </div>
         <Link to="/app/materias" className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-950/40 transition hover:-translate-y-0.5">

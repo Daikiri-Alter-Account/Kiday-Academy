@@ -3,6 +3,8 @@ import { promisify } from "node:util";
 import { getDb } from "../db.js";
 import { config } from "../config.js";
 import { HttpError } from "./http.js";
+import { normalizePlan, planCapabilities } from "./plans.js";
+import { ageFromBirthDate } from "./profile.js";
 
 const scrypt = promisify(scryptCallback);
 const KEY_LENGTH = 64;
@@ -40,12 +42,33 @@ export function hashToken(token) {
   return createHash("sha256").update(token).digest("hex");
 }
 
+function displayName(user) {
+  return (
+    user.name?.trim() ||
+    [user.firstName, user.lastName].filter(Boolean).join(" ").trim()
+  );
+}
+
 export function publicUser(user) {
+  const plan = user.role === "student" ? normalizePlan(user.plan) : null;
+  const name = displayName(user) || "Estudiante";
+  const nameParts = name.split(/\s+/).filter(Boolean);
+  const firstName = user.firstName?.trim() || nameParts[0] || "Estudiante";
+  const lastName = user.lastName?.trim() || nameParts.slice(1).join(" ");
+
   return {
     id: user._id.toString(),
-    name: user.name,
+    name,
+    firstName,
+    lastName,
+    birthDate: user.birthDate ?? null,
+    age: ageFromBirthDate(user.birthDate),
+    institution: user.institution ?? null,
+    grade: user.grade ?? null,
     email: user.email,
     role: user.role,
+    plan,
+    capabilities: plan ? planCapabilities(plan) : [],
   };
 }
 

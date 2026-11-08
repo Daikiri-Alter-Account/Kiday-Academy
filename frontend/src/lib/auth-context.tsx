@@ -1,5 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { api, clearToken, getToken, setToken, type AuthUser } from "@/lib/api";
+import { api, clearToken, getToken, setToken, type AuthUser, type RegisterPayload } from "@/lib/api";
 
 type AuthStatus = "loading" | "authenticated" | "anonymous";
 
@@ -7,7 +7,7 @@ type AuthContextValue = {
   status: AuthStatus;
   user: AuthUser | null;
   login: (email: string, password: string) => Promise<AuthUser>;
-  register: (payload: { name: string; email: string; password: string }) => Promise<AuthUser>;
+  register: (payload: RegisterPayload) => Promise<AuthUser>;
   logout: () => Promise<void>;
 };
 
@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const register = useCallback(
-    async (payload: { name: string; email: string; password: string }) => {
+    async (payload: RegisterPayload) => {
       const result = await api.register(payload);
       setToken(result.token);
       setUser(result.user);

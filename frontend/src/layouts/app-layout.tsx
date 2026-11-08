@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
-import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
+  BadgeCheck,
   Bell,
   BookOpen,
   ChevronLeft,
@@ -17,9 +18,11 @@ import {
   X,
 } from "lucide-react";
 import { Brand } from "@/components/brand";
+import { PlanIcon } from "@/components/plan-icon";
 import { SkipLink } from "@/components/skip-link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/lib/auth-context";
+import { getPlanMeta } from "@/lib/plans";
 import { useStudy } from "@/lib/study-store";
 
 const primaryLinks = [
@@ -52,6 +55,9 @@ function navClass({ isActive }: { isActive: boolean }) {
 }
 
 function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
+  const { user } = useAuth();
+  const plan = getPlanMeta(user?.plan);
+
   return (
     <div className="flex h-full flex-col">
       <Brand to="/app" onClick={onNavigate} />
@@ -83,14 +89,29 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
       </nav>
 
       <div className="space-y-3">
-        <div className="rounded-xl border border-violet-400/10 bg-gradient-to-br from-violet-500/[0.12] to-indigo-500/[0.06] p-3">
-          <div className="mb-1 flex items-center gap-1.5 text-[11px] font-medium text-[var(--accent)]">
-            <Sparkles size={12} /> Kiday IA
+        <div className={`rounded-xl border p-3 ${plan.cardClass}`}>
+          <div className="flex items-center gap-2">
+            <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white/[0.06] p-1">
+              <PlanIcon service={{ slug: plan.slug }} className="size-full" />
+            </span>
+            <div className="min-w-0">
+              <p className="truncate text-[11px] font-semibold">{plan.name}</p>
+              <p className="truncate text-[10px] text-[var(--muted)]">{plan.sidebarTagline}</p>
+            </div>
           </div>
-          <p className="text-[11px] leading-4 text-[var(--muted)]">¿En qué tema quieres avanzar hoy?</p>
-          <NavLink to="/app/asistente" onClick={onNavigate} className="mt-3 inline-flex items-center gap-1 text-[11px] font-medium text-[var(--accent)] hover:text-[var(--accent)]">
-            Abrir asistente <ChevronRight size={12} />
-          </NavLink>
+          {plan.slug === "kiday-academy" ? (
+            <p className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium text-emerald-500">
+              <BadgeCheck size={12} /> Todo desbloqueado
+            </p>
+          ) : (
+            <Link
+              to="/#planes"
+              onClick={onNavigate}
+              className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium text-[var(--accent)] hover:underline"
+            >
+              Mejorar plan <ChevronRight size={12} />
+            </Link>
+          )}
         </div>
         <NavLink to="/" className="flex items-center gap-2 px-3 py-2 text-xs text-[var(--muted)] transition hover:text-[var(--foreground)]">
           <ChevronLeft size={14} /> Volver al inicio
@@ -109,6 +130,7 @@ function initials(name: string) {
 
 export function AppLayout() {
   const { user, logout } = useAuth();
+  const plan = getPlanMeta(user?.plan);
   const { status: workspaceStatus, error: workspaceError, reload } = useStudy();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -180,6 +202,13 @@ export function AppLayout() {
               </button>
               <span className="hidden max-w-32 truncate text-xs font-medium text-[var(--muted)] sm:block">
                 {user?.name ?? "Estudiante"}
+              </span>
+              <span
+                title={`Plan ${plan.name}`}
+                className={`hidden items-center gap-1.5 rounded-full border px-2 py-1 text-[10px] font-medium text-[var(--foreground)] md:inline-flex ${plan.badgeClass}`}
+              >
+                <PlanIcon service={{ slug: plan.slug }} className="size-4" />
+                {plan.shortName}
               </span>
               <span
                 title={user?.name ?? "Estudiante"}

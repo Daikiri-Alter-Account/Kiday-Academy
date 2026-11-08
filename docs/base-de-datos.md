@@ -82,10 +82,18 @@ Guarda administradores y estudiantes. El campo `role` decide qué puede hacer ca
 | Campo | Tipo | Descripción |
 | --- | --- | --- |
 | `_id` | ObjectId | Identificador interno generado por MongoDB. |
-| `name` | string | Nombre visible. |
+| `name` | string | Nombre visible completo (`firstName` + `lastName`). |
+| `firstName` | string | Nombre(s) del estudiante. |
+| `lastName` | string | Apellido(s) del estudiante. |
+| `birthDate` | string | Fecha de nacimiento en formato `YYYY-MM-DD`. No se guarda la edad; se calcula al leer el perfil. |
+| `institution` | string \| null | Colegio, universidad o academia. Opcional. |
+| `grade` | string \| null | Grado o semestre. Opcional. |
+| `profileCompletedAt` | Date | Momento en que se completó el formulario de datos personales. |
 | `email` | string | Correo normalizado en minúsculas. Es único. |
 | `passwordHash` | string | Hash `scrypt` con sal. Nunca se guarda la contraseña original. |
 | `role` | string | `admin` o `student`. |
+| `plan` | string | Solo estudiantes. `kiday-free`, `kiday-pro` o `kiday-academy`. Si falta, la API lo trata como `kiday-free`. |
+| `planStartedAt` | Date | Fecha desde la que está activo el plan actual. Opcional. |
 | `createdAt` | Date | Fecha de creación. |
 | `updatedAt` | Date | Última actualización del perfil. |
 
@@ -95,12 +103,27 @@ Ejemplo:
 {
   "_id": "665f1c2a9f1b2c0012345678",
   "name": "Estudiante de ejemplo",
+  "firstName": "Estudiante",
+  "lastName": "De Ejemplo",
+  "birthDate": "2005-05-15",
+  "institution": "Colegio Kiday",
+  "grade": "11.º",
+  "profileCompletedAt": "2026-10-27T20:00:00.000Z",
   "email": "estudiante@ejemplo.com",
   "passwordHash": "scrypt$sal$hash",
   "role": "student",
+  "plan": "kiday-academy",
+  "planStartedAt": "2026-11-07T20:00:00.000Z",
   "createdAt": "2026-10-27T20:00:00.000Z",
-  "updatedAt": "2026-10-27T20:00:00.000Z"
+  "updatedAt": "2026-11-07T20:00:00.000Z"
 }
+```
+
+El perfil se refleja en `publicUser()` junto con la edad calculada, el plan y la lista de capacidades desbloqueadas; nunca se expone `passwordHash`. Para cambiar el plan de una cuenta existente:
+
+```bash
+cd backend
+npm run plan:set -- correo@ejemplo.com kiday-academy
 ```
 
 ### `sessions`: sesiones activas

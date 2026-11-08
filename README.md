@@ -139,6 +139,14 @@ La API queda en `http://localhost:4000`. Verifica `GET /api/health`.
 
 > El seed es idempotente para servicios y no duplica el administrador si ya existe.
 
+Los estudiantes nuevos empiezan en `kiday-free`. Para asignar un plan manualmente:
+
+```bash
+npm run plan:set -- correo@ejemplo.com kiday-academy
+```
+
+Planes disponibles: `kiday-free`, `kiday-pro` y `kiday-academy`. La sesión y `/api/auth/me` devuelven el plan y las capacidades desbloqueadas.
+
 ### 2. Frontend
 
 En otra terminal:
@@ -152,7 +160,7 @@ npm run dev
 
 Abre `http://localhost:5173`. Si no defines `VITE_API_URL`, el cliente usa `http://localhost:4000`.
 
-Abre `http://localhost:5173/registro` para crear una cuenta de estudiante o `http://localhost:5173/login` para iniciar sesión. Las materias y tareas se guardan en MongoDB por usuario; el navegador conserva una caché `kiday-study-workspace-v2:<id>` y migra automáticamente los datos antiguos de `kiday-study-workspace-v1` cuando la cuenta todavía no tiene información en el servidor.
+Abre `http://localhost:5173/registro` para crear una cuenta de estudiante en dos pasos (credenciales y datos personales) o `http://localhost:5173/login` para iniciar sesión. El nombre, apellido, fecha de nacimiento, institución y grado se guardan en MongoDB. Las materias y tareas se guardan por usuario; el navegador conserva una caché `kiday-study-workspace-v2:<id>` y migra automáticamente los datos antiguos de `kiday-study-workspace-v1` cuando la cuenta todavía no tiene información en el servidor.
 
 ### 3. Panel administrativo
 
@@ -217,7 +225,7 @@ GitHub Actions ejecuta el workflow **CI** en cada push y pull request: levanta l
 | GET | `/api/health` | Público | Estado del servicio. |
 | GET | `/api/services` | Público | Planes activos ordenados. |
 | POST | `/api/contact` | Público | Crea un mensaje de contacto. |
-| POST | `/api/auth/register` | Público con rate limit | Crea una cuenta de estudiante y devuelve token. |
+| POST | `/api/auth/register` | Público con rate limit | Crea una cuenta con datos personales y devuelve token. |
 | POST | `/api/auth/login` | Público con rate limit | Inicia sesión y devuelve token. |
 | GET | `/api/auth/me` | Sesión | Devuelve el usuario autenticado. |
 | POST | `/api/auth/logout` | Sesión | Invalida la sesión. |

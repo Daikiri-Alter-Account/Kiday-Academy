@@ -2,7 +2,7 @@ import { ObjectId } from "mongodb";
 import { closeDatabase, connectDatabase, getDb } from "../db.js";
 
 const descriptions = {
-  users: "Cuentas de estudiantes y administradores. El campo role define el acceso.",
+  users: "Cuentas de estudiantes y administradores. role define el acceso y plan las capacidades.",
   sessions: "Sesiones activas. Guarda hashes de tokens, nunca el token original.",
   subjects: "Materias de cada estudiante. Se aíslan por userId.",
   tasks: "Tareas de cada estudiante, asociadas opcionalmente a una materia.",
@@ -115,6 +115,7 @@ try {
   console.log("  - tasks.userId -> users._id");
   console.log("  - tasks.subjectId -> subjects._id (opcional)");
   console.log("  - users.role: admin | student");
+  console.log("  - users.plan: kiday-free | kiday-pro | kiday-academy (solo estudiantes)");
   console.log("  - services y messages son colecciones independientes.\n");
   console.log("Las materias y tareas se guardan en MongoDB y se aíslan por userId.\n");
 } catch (error) {

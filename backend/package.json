@@ -10,6 +10,7 @@
     "dev": "node --watch --env-file-if-exists=.env src/index.js",
     "start": "node src/index.js",
     "seed": "node --env-file-if-exists=.env src/scripts/seed.js",
+    "plan:set": "node --env-file-if-exists=.env src/scripts/set-plan.js",
     "db:inspect": "node --env-file-if-exists=.env src/scripts/db-inspect.js",
     "test": "node src/scripts/smoke-test.js"
   },

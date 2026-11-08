@@ -63,11 +63,21 @@ export type ContactPayload = {
   message: string;
 };
 
+export type PlanSlug = "kiday-free" | "kiday-pro" | "kiday-academy";
+
 export type AuthUser = {
   id: string;
   name: string;
+  firstName: string;
+  lastName: string;
+  birthDate: string | null;
+  age: number | null;
+  institution: string | null;
+  grade: string | null;
   email: string;
   role: "admin" | "student";
+  plan: PlanSlug | null;
+  capabilities: string[];
 };
 
 export type LoginResponse = {
@@ -77,7 +87,11 @@ export type LoginResponse = {
 };
 
 export type RegisterPayload = {
-  name: string;
+  firstName: string;
+  lastName: string;
+  birthDate: string;
+  institution?: string;
+  grade?: string;
   email: string;
   password: string;
 };
