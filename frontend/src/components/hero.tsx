@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { ThemeLogo } from "@/components/theme-logo";
 import {
   ArrowRight,
   Bell,
@@ -30,6 +31,13 @@ export function Hero() {
 
       <div className="mx-auto max-w-7xl">
         <div className="mx-auto max-w-4xl text-center">
+          <div className="mb-7 flex justify-center">
+            <div className="relative">
+              <div className="pointer-events-none absolute inset-4 -z-10 rounded-full bg-violet-600/30 blur-3xl" />
+              <ThemeLogo className="size-28 drop-shadow-[0_18px_45px_rgba(109,40,217,0.35)] sm:size-32" />
+            </div>
+          </div>
+
           <div className="mb-7 inline-flex items-center gap-2 rounded-full border border-violet-400/20 bg-violet-400/[0.08] px-3.5 py-2 text-xs font-medium text-violet-200 shadow-[0_0_35px_rgba(139,92,246,0.1)] sm:text-sm">
             <Sparkles size={15} className="text-violet-300" />
             Tu espacio de estudio, ahora con superpoderes

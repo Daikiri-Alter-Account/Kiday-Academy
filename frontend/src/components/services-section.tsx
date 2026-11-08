@@ -1,4 +1,5 @@
 import { Check, RefreshCw, Sparkles } from "lucide-react";
+import { PlanIcon } from "@/components/plan-icon";
 import type { Service } from "@/lib/api";
 
 type ServicesSectionProps = {
@@ -73,6 +74,10 @@ export function ServicesSection({ services, status, error, onRetry, onSelectPlan
                     Más popular
                   </span>
                 )}
+
+                <span className="mb-5 grid size-20 place-items-center rounded-2xl border border-[var(--border)] bg-white/[0.03] p-2">
+                  <PlanIcon service={service} className="size-full" />
+                </span>
 
                 <h3 className="text-lg font-semibold">{service.name}</h3>
                 <p className="mt-1 text-xs text-[var(--accent)]">{service.tagline}</p>

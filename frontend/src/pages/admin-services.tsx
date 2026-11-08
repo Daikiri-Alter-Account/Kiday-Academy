@@ -10,6 +10,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
+import { PlanIcon } from "@/components/plan-icon";
 import {
   api,
   type Service,
@@ -246,10 +247,15 @@ export function AdminServicesPage() {
           {services.map((service) => (
             <article key={service.id} className="flex flex-col rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4">
               <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <h3 className="truncate text-sm font-semibold">{service.name}</h3>
-                  <p className="mt-0.5 truncate text-[11px] text-[var(--accent)]">{service.tagline}</p>
-                  <code className="mt-1 block truncate text-[10px] text-[var(--muted)]">/{service.slug}</code>
+                <div className="flex min-w-0 items-start gap-3">
+                  <span className="grid size-11 shrink-0 place-items-center rounded-xl border border-[var(--border)] bg-white/[0.03] p-1.5">
+                    <PlanIcon service={service} className="size-full" />
+                  </span>
+                  <div className="min-w-0">
+                    <h3 className="truncate text-sm font-semibold">{service.name}</h3>
+                    <p className="mt-0.5 truncate text-[11px] text-[var(--accent)]">{service.tagline}</p>
+                    <code className="mt-1 block truncate text-[10px] text-[var(--muted)]">/{service.slug}</code>
+                  </div>
                 </div>
                 <div className="flex shrink-0 flex-col items-end gap-1">
                   <span className={`rounded-full px-2 py-1 text-[9px] ${service.active ? "bg-emerald-400/10 text-emerald-300" : "bg-slate-500/10 text-[var(--muted)]"}`}>
