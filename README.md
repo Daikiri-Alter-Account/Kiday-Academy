@@ -22,6 +22,7 @@ Proyecto final del curso de desarrollo web avanzado. Frontend y backend están s
 - Panel con métricas derivadas de las materias y tareas reales, accesos rápidos y resumen de la semana.
 - CRUD de materias con promedio, estado y avance de actividades. Eliminar una materia también elimina sus tareas.
 - Tareas y recordatorios con fecha de entrega, prioridad, filtros, tareas atrasadas y vista de los próximos siete días.
+- Calendario mensual que reúne tareas y sesiones de grupo, con panel de próximos eventos y recordatorios del navegador mientras la app está abierta.
 - Promediador ponderado persistente por materia, con cálculo en vivo, edición de actividades y validaciones.
 - Registro e inicio de sesión de estudiantes con correo y contraseña.
 - Espacio académico persistente: materias y tareas se guardan en MongoDB y se aíslan por cuenta; el navegador solo conserva una caché para cargar más rápido.
@@ -321,7 +322,7 @@ Para una siguiente etapa se recomienda migrar el token a cookies `HttpOnly`, agr
 
 ## Roadmap
 
-- Calendario completo con vista mensual, recordatorios por email o push y notificaciones.
+- Recordatorios por email o push con servicio en segundo plano, para recibir avisos aunque la app esté cerrada.
 - Notificaciones de grupo y comunidades por materia.
 - Biblioteca de materiales de estudio.
 - Historial de conversaciones del asistente y límites por plan.

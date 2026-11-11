@@ -171,7 +171,9 @@ export function DashboardPage() {
         <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-semibold">Tu semana</h3>
-            <span className="text-[10px] text-[var(--muted)]">Próximos 7 días</span>
+            <Link to="/app/calendario" className="inline-flex items-center gap-1 text-[10px] font-medium text-[var(--accent)] hover:text-violet-200">
+              Abrir calendario <ArrowRight size={11} />
+            </Link>
           </div>
           <div className="mt-5 flex h-24 items-end justify-between gap-2 px-1">
             {weekDays.map((day) => {

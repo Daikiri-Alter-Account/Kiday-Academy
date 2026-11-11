@@ -4,6 +4,7 @@ import {
   BadgeCheck,
   Bell,
   BookOpen,
+  CalendarDays,
   ChevronLeft,
   ChevronRight,
   GraduationCap,
@@ -29,6 +30,7 @@ const primaryLinks = [
   { label: "Panel principal", to: "/app", icon: LayoutDashboard, end: true },
   { label: "Mis materias", to: "/app/materias", icon: BookOpen },
   { label: "Tareas", to: "/app/tareas", icon: ListTodo },
+  { label: "Calendario", to: "/app/calendario", icon: CalendarDays },
   { label: "Grupos de estudio", to: "/app/grupos", icon: UsersRound },
 ];
 
@@ -41,6 +43,7 @@ const titles: Record<string, string> = {
   "/app": "Panel principal",
   "/app/materias": "Mis materias",
   "/app/tareas": "Tareas y recordatorios",
+  "/app/calendario": "Calendario",
   "/app/grupos": "Grupos de estudio",
   "/app/asistente": "Asistente IA",
   "/app/promediador": "Promediador",

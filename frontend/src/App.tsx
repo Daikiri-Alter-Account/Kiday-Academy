@@ -11,6 +11,7 @@ import { AdminOverviewPage } from "@/pages/admin-overview";
 import { AdminServicesPage } from "@/pages/admin-services";
 import { AssistantPage } from "@/pages/assistant";
 import { AveragerPage } from "@/pages/averager";
+import { CalendarPage } from "@/pages/calendar";
 import { DashboardPage } from "@/pages/dashboard";
 import { GroupsPage } from "@/pages/groups";
 import { LandingPage } from "@/pages/landing";
@@ -51,6 +52,7 @@ export function App() {
               <Route index element={<DashboardPage />} />
               <Route path="materias" element={<SubjectsPage />} />
               <Route path="tareas" element={<TasksPage />} />
+              <Route path="calendario" element={<CalendarPage />} />
               <Route path="grupos" element={<GroupsPage />} />
               <Route path="promediador" element={<AveragerPage />} />
               <Route path="asistente" element={<AssistantPage />} />

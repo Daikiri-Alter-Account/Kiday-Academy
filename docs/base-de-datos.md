@@ -362,7 +362,7 @@ Ejemplo:
 
 ### `groupSessions`: sesiones programadas
 
-Las sesiones son fechas futuras creadas por el dueño del grupo. La API devuelve solo las próximas sesiones y las ordena por fecha.
+Las sesiones son fechas futuras creadas por el dueño del grupo. El detalle del grupo devuelve solo las próximas sesiones; el listado de grupos incluye el historial de sesiones para alimentar el calendario. En ambos casos se ordenan por fecha.
 
 | Campo | Tipo | Descripción |
 | --- | --- | --- |
@@ -510,7 +510,7 @@ La colección puede verse vacía hasta que alguien envíe el formulario de conta
 | `groupMembers` | `groupId + userId` único | Evitar membresías duplicadas. |
 | `groupMembers` | `userId + joinedAt` | Cargar los grupos de un estudiante. |
 | `groupMembers` | `groupId + joinedAt` | Cargar los miembros de un grupo en orden. |
-| `groupSessions` | `groupId + startsAt` | Consultar las próximas sesiones de un grupo. |
+| `groupSessions` | `groupId + startsAt` | Consultar las sesiones de un grupo y alimentar el calendario. |
 | `groupMessages` | `groupId + _id` | Cargar el chat de un grupo en orden y paginar. |
 | `grades` | `userId + createdAt` | Cargar las actividades del promediador. |
 | `grades` | `userId + subjectId` | Separar las notas por materia. |

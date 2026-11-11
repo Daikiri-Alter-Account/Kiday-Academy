@@ -82,7 +82,7 @@ export function serializeGroupSession(session) {
   };
 }
 
-export function serializeGroup(group, { role, memberCount = 0, members = [], sessions = [] } = {}) {
+export function serializeGroup(group, { role, memberCount = 0, members = [], sessions = [], nextSession } = {}) {
   const { _id, ownerId, ...rest } = group;
   return {
     id: _id.toString(),
@@ -91,7 +91,7 @@ export function serializeGroup(group, { role, memberCount = 0, members = [], ses
     memberCount,
     members,
     sessions,
-    nextSession: sessions[0] ?? null,
+    nextSession: nextSession !== undefined ? nextSession : sessions[0] ?? null,
     ...rest,
   };
 }

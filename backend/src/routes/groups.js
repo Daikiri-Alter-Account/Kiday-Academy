@@ -167,9 +167,9 @@ async function loadGroupSummaries(db, userId) {
       .toArray(),
     db
       .collection("groupSessions")
-      .find({ groupId: { $in: groupIds }, startsAt: { $gte: new Date() } })
+      .find({ groupId: { $in: groupIds } })
       .sort({ startsAt: 1, _id: 1 })
-      .limit(500)
+      .limit(1000)
       .toArray(),
   ]);
 
@@ -199,12 +199,14 @@ async function loadGroupSummaries(db, userId) {
       return user ? [serializeGroupMember(item, user)] : [];
     });
     const sessions = sessionsByGroup.get(key) ?? [];
+    const nextSession = sessions.find((session) => session.startsAt.getTime() >= Date.now());
 
     return serializeGroup(group, {
       role: roleByGroup.get(key) ?? "member",
       memberCount: (membersByGroup.get(key) ?? []).length,
       members,
-      sessions: sessions.slice(0, 1).map(serializeGroupSession),
+      sessions: sessions.map(serializeGroupSession),
+      nextSession: nextSession ? serializeGroupSession(nextSession) : null,
     });
   });
 }
