@@ -54,5 +54,7 @@ async function ensureIndexes(db) {
     db.collection("groupMembers").createIndex({ groupId: 1, joinedAt: 1 }),
     db.collection("groupSessions").createIndex({ groupId: 1, startsAt: 1 }),
     db.collection("groupMessages").createIndex({ groupId: 1, _id: -1 }),
+    db.collection("grades").createIndex({ userId: 1, createdAt: 1 }),
+    db.collection("grades").createIndex({ userId: 1, subjectId: 1 }),
   ]);
 }

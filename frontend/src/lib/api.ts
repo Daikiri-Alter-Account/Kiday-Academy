@@ -152,6 +152,23 @@ export type StudyGroup = {
   updatedAt?: string;
 };
 
+export type GradeItem = {
+  id: string;
+  subjectId: string | null;
+  name: string;
+  grade: number;
+  weight: number;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type GradeInput = {
+  name: string;
+  grade: number;
+  weight: number;
+  subjectId?: string | null;
+};
+
 export type GroupInput = {
   name: string;
   subject: string;
@@ -266,6 +283,21 @@ export const api = {
       method: "POST",
       body: { messages },
     }),
+  grades: {
+    list: () => apiRequest<{ grades: GradeItem[] }>("/api/grades"),
+    create: (payload: GradeInput) =>
+      apiRequest<{ grade: GradeItem }>("/api/grades", {
+        method: "POST",
+        body: payload,
+      }),
+    update: (id: string, payload: Partial<GradeInput>) =>
+      apiRequest<{ grade: GradeItem }>(`/api/grades/${id}`, {
+        method: "PATCH",
+        body: payload,
+      }),
+    deleteGrade: (id: string) =>
+      apiRequest<void>(`/api/grades/${id}`, { method: "DELETE" }),
+  },
   groups: {
     list: () => apiRequest<{ groups: StudyGroup[] }>("/api/groups"),
     get: (id: string) => apiRequest<{ group: StudyGroup }>(`/api/groups/${id}`),

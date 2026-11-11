@@ -22,7 +22,7 @@ Proyecto final del curso de desarrollo web avanzado. Frontend y backend están s
 - Panel con métricas derivadas de las materias y tareas reales, accesos rápidos y resumen de la semana.
 - CRUD de materias con promedio, estado y avance de actividades. Eliminar una materia también elimina sus tareas.
 - Tareas y recordatorios con fecha de entrega, prioridad, filtros, tareas atrasadas y vista de los próximos siete días.
-- Promediador ponderado funcional, con cálculo en vivo y validaciones.
+- Promediador ponderado persistente por materia, con cálculo en vivo, edición de actividades y validaciones.
 - Registro e inicio de sesión de estudiantes con correo y contraseña.
 - Espacio académico persistente: materias y tareas se guardan en MongoDB y se aíslan por cuenta; el navegador solo conserva una caché para cargar más rápido.
 - Asistente Kiday IA conectado a un proveedor compatible con OpenAI. El backend inyecta el catálogo vigente en el prompt para que las recomendaciones sean reales.
@@ -62,7 +62,7 @@ No se usan librerías de UI, estado global ni autenticación de terceros. La aut
 ├── backend/                  # API Express
 │   └── src/
 │       ├── lib/              # auth, validación, rate limit, errores
-│       ├── routes/           # services, contact, auth, admin, ai, workspace, groups
+│       ├── routes/           # services, contact, auth, admin, ai, workspace, groups, grades
 │       ├── scripts/          # seed, smoke test e inspector de base de datos
 │       └── seed.js           # datos iniciales
 ├── docs/                     # documentación de la base de datos
@@ -183,7 +183,7 @@ cd backend
 npm test
 ```
 
-El smoke test levanta una MongoDB en memoria, siembra datos y verifica catálogo, contacto, registro de estudiantes, login, sesiones, permisos, estadísticas, mensajes, CRUD de servicios, CRUD e importación del espacio académico, grupos y sesiones de estudio, aislamiento entre estudiantes, IA no configurada y cierre de sesión. La primera ejecución descarga el binario de MongoDB y puede tardar unos minutos.
+El smoke test levanta una MongoDB en memoria, siembra datos y verifica catálogo, contacto, registro de estudiantes, login, sesiones, permisos, estadísticas, mensajes, CRUD de servicios, CRUD e importación del espacio académico, notas del promediador, grupos, sesiones y chat de estudio, aislamiento entre estudiantes, IA no configurada y cierre de sesión. La primera ejecución descarga el binario de MongoDB y puede tardar unos minutos.
 
 Compilación del frontend:
 
@@ -238,6 +238,10 @@ GitHub Actions ejecuta el workflow **CI** en cada push y pull request: levanta l
 | POST | `/api/workspace/tasks` | Sesión | Crea una tarea propia. |
 | PATCH | `/api/workspace/tasks/:id` | Sesión | Actualiza una tarea propia. |
 | DELETE | `/api/workspace/tasks/:id` | Sesión | Elimina una tarea propia. |
+| GET | `/api/grades` | Sesión | Devuelve las actividades y notas del promediador. |
+| POST | `/api/grades` | Sesión | Crea una actividad con nota y peso. |
+| PATCH | `/api/grades/:id` | Sesión | Actualiza una actividad propia. |
+| DELETE | `/api/grades/:id` | Sesión | Elimina una actividad propia. |
 | GET | `/api/groups` | Sesión | Lista los grupos a los que pertenece el estudiante. |
 | POST | `/api/groups` | Sesión | Crea un grupo y genera un código de invitación. |
 | POST | `/api/groups/join` | Sesión | Une al estudiante a un grupo mediante su código. |
@@ -311,7 +315,7 @@ npm run seed
 - El endpoint de IA no requiere sesión para que el asistente sea accesible desde la demo, pero está limitado a 20 solicitudes cada 10 minutos por IP y a 700 tokens de salida.
 - Las claves de Mongo, admin e IA viven únicamente en variables de entorno del backend.
 - Los estudiantes solo acceden a `/app`; las rutas `/api/admin/*` exigen rol `admin`.
-- Las rutas `/api/workspace/*` y `/api/groups/*` obtienen el `userId` de la sesión y nunca aceptan un usuario enviado por el cliente, por lo que no permiten leer ni modificar datos de otra cuenta. Los detalles de un grupo solo se devuelven a sus miembros.
+- Las rutas `/api/workspace/*`, `/api/grades/*` y `/api/groups/*` obtienen el `userId` de la sesión y nunca aceptan un usuario enviado por el cliente, por lo que no permiten leer ni modificar datos de otra cuenta. Los detalles de un grupo solo se devuelven a sus miembros.
 
 Para una siguiente etapa se recomienda migrar el token a cookies `HttpOnly`, agregar verificación de email y limitar el chat a usuarios autenticados.
 

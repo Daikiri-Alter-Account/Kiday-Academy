@@ -37,6 +37,15 @@ function initials(name) {
   return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
 }
 
+export function serializeGradeItem(item) {
+  const { _id, userId, subjectId, ...rest } = item;
+  return {
+    id: _id.toString(),
+    subjectId: subjectId ? subjectId.toString() : null,
+    ...rest,
+  };
+}
+
 export function serializeGroupMember(member, user) {
   const name = displayName(user);
   return {

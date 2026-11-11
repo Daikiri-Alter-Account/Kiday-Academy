@@ -287,7 +287,10 @@ router.delete(
     const result = await db.collection("subjects").deleteOne({ _id: subjectId, userId });
     if (result.deletedCount === 0) throw new HttpError(404, "Materia no encontrada.");
 
-    await db.collection("tasks").deleteMany({ userId, subjectId });
+    await Promise.all([
+      db.collection("tasks").deleteMany({ userId, subjectId }),
+      db.collection("grades").deleteMany({ userId, subjectId }),
+    ]);
     res.status(204).end();
   }),
 );

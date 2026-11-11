@@ -242,6 +242,66 @@ try {
   assert.equal(secondWorkspace.data.subjects.length, 0);
   assert.equal(secondWorkspace.data.tasks.length, 0);
 
+  const gradesUnauthorized = await request("/api/grades");
+  assert.equal(gradesUnauthorized.status, 401);
+
+  const createdGrade = await request("/api/grades", {
+    method: "POST",
+    token: register.data.token,
+    body: {
+      name: "Parcial 1",
+      grade: 4.2,
+      weight: 30,
+      subjectId: createdSubject.data.subject.id,
+    },
+  });
+  assert.equal(createdGrade.status, 201);
+  assert.equal(createdGrade.data.grade.subjectId, createdSubject.data.subject.id);
+  assert.equal(createdGrade.data.grade.grade, 4.2);
+
+  const gradeList = await request("/api/grades", { token: register.data.token });
+  assert.equal(gradeList.status, 200);
+  assert.equal(gradeList.data.grades.length, 1);
+
+  const updatedGrade = await request(`/api/grades/${createdGrade.data.grade.id}`, {
+    method: "PATCH",
+    token: register.data.token,
+    body: { grade: 4.8, weight: 35 },
+  });
+  assert.equal(updatedGrade.status, 200);
+  assert.equal(updatedGrade.data.grade.grade, 4.8);
+  assert.equal(updatedGrade.data.grade.weight, 35);
+
+  const secondGrades = await request("/api/grades", { token: secondRegister.data.token });
+  assert.equal(secondGrades.data.grades.length, 0);
+
+  const crossGradeUpdate = await request(`/api/grades/${createdGrade.data.grade.id}`, {
+    method: "PATCH",
+    token: secondRegister.data.token,
+    body: { grade: 1 },
+  });
+  assert.equal(crossGradeUpdate.status, 404);
+
+  const crossGradeSubject = await request("/api/grades", {
+    method: "POST",
+    token: secondRegister.data.token,
+    body: { name: "Nota ajena", grade: 3, weight: 20, subjectId: createdSubject.data.subject.id },
+  });
+  assert.equal(crossGradeSubject.status, 400);
+
+  const removableGrade = await request("/api/grades", {
+    method: "POST",
+    token: register.data.token,
+    body: { name: "Actividad temporal", grade: 3, weight: 10 },
+  });
+  assert.equal(removableGrade.status, 201);
+
+  const deletedGrade = await request(`/api/grades/${removableGrade.data.grade.id}`, {
+    method: "DELETE",
+    token: register.data.token,
+  });
+  assert.equal(deletedGrade.status, 204);
+
   const groupsUnauthorized = await request("/api/groups");
   assert.equal(groupsUnauthorized.status, 401);
 
@@ -454,6 +514,11 @@ try {
   });
   assert.equal(workspaceAfterDelete.data.subjects.length, 0);
   assert.equal(workspaceAfterDelete.data.tasks.length, 0);
+
+  const gradesAfterSubjectDelete = await request("/api/grades", {
+    token: register.data.token,
+  });
+  assert.equal(gradesAfterSubjectDelete.data.grades.length, 0);
 
   const standaloneTask = await request("/api/workspace/tasks", {
     method: "POST",

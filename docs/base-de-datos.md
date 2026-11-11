@@ -1,6 +1,6 @@
 # Base de datos de Kiday Academy
 
-Kiday Academy usa MongoDB con la base `kiday_academy`. La estructura es intencionalmente pequeña: diez colecciones, con relaciones claras entre usuarios, sesiones, materias, tareas y grupos de estudio.
+Kiday Academy usa MongoDB con la base `kiday_academy`. La estructura es intencionalmente pequeña: once colecciones, con relaciones claras entre usuarios, sesiones, materias, tareas, notas y grupos de estudio.
 
 ## Mapa rápido
 
@@ -10,6 +10,8 @@ erDiagram
     USERS ||--o{ SUBJECTS : "crea"
     USERS ||--o{ TASKS : "crea"
     SUBJECTS ||--o{ TASKS : "agrupa"
+    USERS ||--o{ GRADES : "registra"
+    SUBJECTS ||--o{ GRADES : "pondera"
     USERS ||--o{ GROUPS : "crea"
     USERS ||--o{ GROUP_MEMBERS : "participa"
     GROUPS ||--o{ GROUP_MEMBERS : "tiene"
@@ -55,6 +57,16 @@ erDiagram
         string dueDate
         string priority
         boolean done
+        Date createdAt
+        Date updatedAt
+    }
+    GRADES {
+        ObjectId _id
+        ObjectId userId
+        ObjectId subjectId
+        string name
+        number grade
+        number weight
         Date createdAt
         Date updatedAt
     }
@@ -232,7 +244,7 @@ Ejemplo:
 
 ### `tasks`: tareas y recordatorios
 
-Cada tarea pertenece a un usuario y puede estar asociada a una materia. Si se elimina la materia, la API elimina también sus tareas para mantener la coherencia.
+Cada tarea pertenece a un usuario y puede estar asociada a una materia. Si se elimina la materia, la API elimina también sus tareas y notas para mantener la coherencia.
 
 | Campo | Tipo | Descripción |
 | --- | --- | --- |
@@ -259,6 +271,36 @@ Ejemplo:
   "done": false,
   "createdAt": "2026-10-27T20:25:00.000Z",
   "updatedAt": "2026-10-27T20:25:00.000Z"
+}
+```
+
+### `grades`: actividades del promediador
+
+Cada nota pertenece a un usuario y puede estar asociada a una materia. El promediador calcula el promedio ponderado de las actividades de la materia seleccionada. Si se elimina la materia, la API elimina también sus notas.
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `_id` | ObjectId | Identificador de la actividad. |
+| `userId` | ObjectId | Referencia a `users._id`. Aísla las notas por cuenta. |
+| `subjectId` | ObjectId o null | Referencia opcional a `subjects._id`. |
+| `name` | string | Nombre de la actividad. |
+| `grade` | number | Nota entre `0` y `5`, redondeada a un decimal. |
+| `weight` | number | Peso entero entre `0` y `100`. |
+| `createdAt` | Date | Fecha de creación. |
+| `updatedAt` | Date | Última edición. |
+
+Ejemplo:
+
+```json
+{
+  "_id": "665f22b09f1b2c0012345688",
+  "userId": "665f1c2a9f1b2c0012345678",
+  "subjectId": "665f206e9f1b2c0012345682",
+  "name": "Parcial 1",
+  "grade": 4.2,
+  "weight": 30,
+  "createdAt": "2026-11-11T20:45:00.000Z",
+  "updatedAt": "2026-11-11T20:45:00.000Z"
 }
 ```
 
@@ -470,6 +512,8 @@ La colección puede verse vacía hasta que alguien envíe el formulario de conta
 | `groupMembers` | `groupId + joinedAt` | Cargar los miembros de un grupo en orden. |
 | `groupSessions` | `groupId + startsAt` | Consultar las próximas sesiones de un grupo. |
 | `groupMessages` | `groupId + _id` | Cargar el chat de un grupo en orden y paginar. |
+| `grades` | `userId + createdAt` | Cargar las actividades del promediador. |
+| `grades` | `userId + subjectId` | Separar las notas por materia. |
 
 Los índices se crean automáticamente al iniciar la API mediante `ensureIndexes()` en `backend/src/db.js`.
 
@@ -483,7 +527,7 @@ Las materias y tareas ya no son la fuente de verdad del navegador. El flujo es:
 4. Cada creación, edición o eliminación se guarda en MongoDB y actualiza la interfaz.
 5. El navegador conserva una copia `kiday-study-workspace-v2:<id>` solo como caché para mostrar datos mientras sincroniza.
 
-La API nunca acepta `userId` desde el cliente: lo obtiene de la sesión. Por eso un estudiante no puede leer ni modificar materias de otra cuenta.
+La API nunca acepta `userId` desde el cliente: lo obtiene de la sesión. Por eso un estudiante no puede leer ni modificar materias, tareas, notas ni grupos de otra cuenta.
 
 ## Grupos de estudio
 
@@ -508,7 +552,7 @@ La versión anterior guardaba todo en `kiday-study-workspace-v1`. Para no perder
 
 ## Qué no está en MongoDB
 
-El historial del chat de IA no se almacena. Las conversaciones viven únicamente en el estado de la página del asistente. El chat interno de los grupos sí se guarda en `groupMessages`. El catálogo, las cuentas, las sesiones, el contacto, las materias, las tareas, los grupos y sus mensajes son datos reales del backend.
+El historial del chat de IA no se almacena. Las conversaciones viven únicamente en el estado de la página del asistente. El chat interno de los grupos sí se guarda en `groupMessages`. El catálogo, las cuentas, las sesiones, el contacto, las materias, las tareas, las notas, los grupos y sus mensajes son datos reales del backend.
 
 ## Cómo inspeccionarla
 
@@ -538,8 +582,8 @@ El comando muestra la base, cada colección, su propósito, cantidad de document
 
 - No edites `passwordHash` ni `tokenHash` manualmente. Usa el registro, el login o el seed.
 - No cambies el `slug` de un plan sin revisar enlaces o referencias.
-- No elimines un usuario sin borrar también sus sesiones, materias, tareas, membresías, mensajes y grupos que haya creado.
+- No elimines un usuario sin borrar también sus sesiones, materias, tareas, notas, membresías, mensajes y grupos que haya creado.
 - Usa el panel administrativo para editar planes y mensajes.
-- Usa la API para modificar materias y tareas; así se respetan las validaciones y la separación por usuario.
+- Usa la API para modificar materias, tareas y notas; así se respetan las validaciones y la separación por usuario.
 - `npm run seed` es idempotente para los planes y no duplica el administrador existente.
 - Si necesitas reiniciar datos de prueba, elimina primero los documentos y vuelve a ejecutar el seed.
