@@ -3,9 +3,11 @@ import { Router } from "express";
 import { ObjectId } from "mongodb";
 import { getDb } from "../db.js";
 import { asyncHandler, HttpError } from "../lib/http.js";
+import { rateLimit } from "../lib/rate-limit.js";
 import {
   serializeGroup,
   serializeGroupMember,
+  serializeGroupMessage,
   serializeGroupSession,
 } from "../lib/serialize.js";
 import { number, optionalString, string } from "../lib/validate.js";
@@ -23,6 +25,7 @@ const GROUP_COLORS = [
 const MAX_MEMBERS = 50;
 const MAX_UPCOMING_SESSIONS = 50;
 const INVITE_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+const messageLimiter = rateLimit({ windowMs: 60_000, max: 30 });
 
 function toObjectId(value, field = "identificador") {
   if (typeof value !== "string" || !/^[a-f0-9]{24}$/i.test(value)) {
@@ -329,6 +332,7 @@ router.delete(
       db.collection("groups").deleteOne({ _id: groupId }),
       db.collection("groupMembers").deleteMany({ groupId }),
       db.collection("groupSessions").deleteMany({ groupId }),
+      db.collection("groupMessages").deleteMany({ groupId }),
     ]);
 
     res.status(204).end();
@@ -363,6 +367,99 @@ router.post(
 
     const session = await db.collection("groupSessions").findOne({ _id: result.insertedId });
     res.status(201).json({ session: serializeGroupSession(session) });
+  }),
+);
+
+router.get(
+  "/:id/messages",
+  asyncHandler(async (req, res) => {
+    const db = getDb();
+    const groupId = toObjectId(req.params.id, "grupo");
+    const membership = await findMembership(db, groupId, currentUserId(req));
+
+    if (!membership) throw new HttpError(404, "El grupo no existe o no perteneces a él.");
+
+    const limit = number(req.query.limit ?? 50, "límite", { integer: true, min: 1, max: 100 });
+    const before = req.query.before ? toObjectId(req.query.before, "mensaje") : null;
+    const filter = { groupId, ...(before ? { _id: { $lt: before } } : {}) };
+
+    const docs = await db
+      .collection("groupMessages")
+      .find(filter)
+      .sort({ _id: -1 })
+      .limit(limit + 1)
+      .toArray();
+
+    const hasMore = docs.length > limit;
+    const page = docs.slice(0, limit).reverse();
+    const users = await loadUsers(db, page.map((message) => message.userId));
+    const messages = page.flatMap((message) => {
+      const user = users.get(message.userId.toString());
+      return user ? [serializeGroupMessage(message, user)] : [];
+    });
+
+    res.json({
+      messages,
+      hasMore,
+      nextBefore: hasMore && page.length > 0 ? page[0]._id.toString() : null,
+    });
+  }),
+);
+
+router.post(
+  "/:id/messages",
+  messageLimiter,
+  asyncHandler(async (req, res) => {
+    const db = getDb();
+    const groupId = toObjectId(req.params.id, "grupo");
+    const userId = currentUserId(req);
+    const membership = await findMembership(db, groupId, userId);
+
+    if (!membership) throw new HttpError(404, "El grupo no existe o no perteneces a él.");
+
+    const content = string(req.body?.content, "mensaje", { max: 1000 });
+    const now = new Date();
+    const result = await db.collection("groupMessages").insertOne({
+      groupId,
+      userId,
+      content,
+      createdAt: now,
+    });
+
+    await db.collection("groups").updateOne({ _id: groupId }, { $set: { updatedAt: now } });
+
+    const [message, user] = await Promise.all([
+      db.collection("groupMessages").findOne({ _id: result.insertedId }),
+      db.collection("users").findOne({ _id: userId }),
+    ]);
+
+    res.status(201).json({ message: serializeGroupMessage(message, user) });
+  }),
+);
+
+router.delete(
+  "/:id/messages/:messageId",
+  asyncHandler(async (req, res) => {
+    const db = getDb();
+    const groupId = toObjectId(req.params.id, "grupo");
+    const messageId = toObjectId(req.params.messageId, "mensaje");
+    const userId = currentUserId(req);
+    const membership = await findMembership(db, groupId, userId);
+
+    if (!membership) throw new HttpError(404, "El grupo no existe o no perteneces a él.");
+
+    const message = await db
+      .collection("groupMessages")
+      .findOne({ _id: messageId, groupId });
+    if (!message) throw new HttpError(404, "El mensaje no existe.");
+
+    const isAuthor = message.userId.toString() === userId.toString();
+    if (!isAuthor && membership.role !== "owner") {
+      throw new HttpError(403, "Solo el autor o el creador pueden eliminar este mensaje.");
+    }
+
+    await db.collection("groupMessages").deleteOne({ _id: messageId });
+    res.status(204).end();
   }),
 );
 

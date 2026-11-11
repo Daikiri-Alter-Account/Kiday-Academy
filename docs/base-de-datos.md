@@ -1,6 +1,6 @@
 # Base de datos de Kiday Academy
 
-Kiday Academy usa MongoDB con la base `kiday_academy`. La estructura es intencionalmente pequeña: nueve colecciones, con relaciones claras entre usuarios, sesiones, materias, tareas y grupos de estudio.
+Kiday Academy usa MongoDB con la base `kiday_academy`. La estructura es intencionalmente pequeña: diez colecciones, con relaciones claras entre usuarios, sesiones, materias, tareas y grupos de estudio.
 
 ## Mapa rápido
 
@@ -15,6 +15,8 @@ erDiagram
     GROUPS ||--o{ GROUP_MEMBERS : "tiene"
     GROUPS ||--o{ GROUP_SESSIONS : "programa"
     USERS ||--o{ GROUP_SESSIONS : "crea"
+    GROUPS ||--o{ GROUP_MESSAGES : "conversa"
+    USERS ||--o{ GROUP_MESSAGES : "escribe"
     USERS {
         ObjectId _id
         string name
@@ -100,6 +102,13 @@ erDiagram
         Date startsAt
         number durationMinutes
         string location
+        Date createdAt
+    }
+    GROUP_MESSAGES {
+        ObjectId _id
+        ObjectId groupId
+        ObjectId userId
+        string content
         Date createdAt
     }
 ```
@@ -339,6 +348,30 @@ Ejemplo:
 }
 ```
 
+### `groupMessages`: chat del grupo
+
+Cada mensaje pertenece a un grupo y a su autor. Solo los miembros pueden leer y escribir; el autor o el creador pueden eliminar un mensaje.
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `_id` | ObjectId | Identificador del mensaje. Ordena el historial. |
+| `groupId` | ObjectId | Referencia a `groups._id`. |
+| `userId` | ObjectId | Referencia a `users._id` del autor. |
+| `content` | string | Texto entre 1 y 1000 caracteres. |
+| `createdAt` | Date | Fecha de envío. |
+
+Ejemplo:
+
+```json
+{
+  "_id": "665f22809f1b2c0012345687",
+  "groupId": "665f220e9f1b2c0012345684",
+  "userId": "665f1c2a9f1b2c0012345678",
+  "content": "¿Nos vemos en la biblioteca?",
+  "createdAt": "2026-11-11T20:40:00.000Z"
+}
+```
+
 ### `services`: planes del catálogo
 
 Aunque la API usa el nombre `services`, cada documento es un plan que aparece en la landing y se administra desde el panel.
@@ -436,6 +469,7 @@ La colección puede verse vacía hasta que alguien envíe el formulario de conta
 | `groupMembers` | `userId + joinedAt` | Cargar los grupos de un estudiante. |
 | `groupMembers` | `groupId + joinedAt` | Cargar los miembros de un grupo en orden. |
 | `groupSessions` | `groupId + startsAt` | Consultar las próximas sesiones de un grupo. |
+| `groupMessages` | `groupId + _id` | Cargar el chat de un grupo en orden y paginar. |
 
 Los índices se crean automáticamente al iniciar la API mediante `ensureIndexes()` en `backend/src/db.js`.
 
@@ -458,7 +492,9 @@ La API nunca acepta `userId` desde el cliente: lo obtiene de la sesión. Por eso
 - `POST /api/groups/join` normaliza el código, valida el límite de 50 miembros y evita duplicados.
 - `GET /api/groups/:id` exige membresía; un estudiante ajeno recibe `404`.
 - Solo el creador puede programar o eliminar sesiones, y solo él puede eliminar el grupo.
-- Al eliminar un grupo se borran también sus membresías y sesiones.
+- Los mensajes se leen con `GET /api/groups/:id/messages`, que devuelve los últimos 50 y admite el cursor `?before=<id>`.
+- El autor puede eliminar su mensaje; el creador puede moderar cualquier mensaje del grupo.
+- Al eliminar un grupo se borran también sus membresías, sesiones y mensajes.
 
 ### Migración desde la versión local
 
@@ -472,7 +508,7 @@ La versión anterior guardaba todo en `kiday-study-workspace-v1`. Para no perder
 
 ## Qué no está en MongoDB
 
-El historial del chat de IA no se almacena. Las conversaciones viven únicamente en el estado de la página del asistente. El chat interno de los grupos todavía no está implementado; cuando se agregue, sus mensajes deberán persistirse en MongoDB. El catálogo, las cuentas, las sesiones, el contacto, las materias, las tareas y los grupos sí son datos reales del backend.
+El historial del chat de IA no se almacena. Las conversaciones viven únicamente en el estado de la página del asistente. El chat interno de los grupos sí se guarda en `groupMessages`. El catálogo, las cuentas, las sesiones, el contacto, las materias, las tareas, los grupos y sus mensajes son datos reales del backend.
 
 ## Cómo inspeccionarla
 
@@ -502,7 +538,7 @@ El comando muestra la base, cada colección, su propósito, cantidad de document
 
 - No edites `passwordHash` ni `tokenHash` manualmente. Usa el registro, el login o el seed.
 - No cambies el `slug` de un plan sin revisar enlaces o referencias.
-- No elimines un usuario sin borrar también sus sesiones, materias, tareas, membresías y grupos que haya creado.
+- No elimines un usuario sin borrar también sus sesiones, materias, tareas, membresías, mensajes y grupos que haya creado.
 - Usa el panel administrativo para editar planes y mensajes.
 - Usa la API para modificar materias y tareas; así se respetan las validaciones y la separación por usuario.
 - `npm run seed` es idempotente para los planes y no duplica el administrador existente.

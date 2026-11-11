@@ -315,6 +315,48 @@ try {
   assert.equal(createdSession.data.session.title, "Repaso de derivadas");
   assert.equal(createdSession.data.session.durationMinutes, 90);
 
+  const emptyMessage = await request(`/api/groups/${createdGroup.data.group.id}/messages`, {
+    method: "POST",
+    token: secondRegister.data.token,
+    body: { content: "   " },
+  });
+  assert.equal(emptyMessage.status, 400);
+
+  const secondMessage = await request(`/api/groups/${createdGroup.data.group.id}/messages`, {
+    method: "POST",
+    token: secondRegister.data.token,
+    body: { content: "¿Nos vemos en la biblioteca?" },
+  });
+  assert.equal(secondMessage.status, 201);
+  assert.equal(secondMessage.data.message.content, "¿Nos vemos en la biblioteca?");
+  assert.equal(secondMessage.data.message.author.name, "Segundo Estudiante");
+
+  const groupMessages = await request(`/api/groups/${createdGroup.data.group.id}/messages`, {
+    token: register.data.token,
+  });
+  assert.equal(groupMessages.status, 200);
+  assert.equal(groupMessages.data.messages.length, 1);
+  assert.equal(groupMessages.data.messages[0].author.name, "Segundo Estudiante");
+
+  const deleteOtherMessage = await request(
+    `/api/groups/${createdGroup.data.group.id}/messages/${secondMessage.data.message.id}`,
+    { method: "DELETE", token: register.data.token },
+  );
+  assert.equal(deleteOtherMessage.status, 204);
+
+  const secondMessageAgain = await request(`/api/groups/${createdGroup.data.group.id}/messages`, {
+    method: "POST",
+    token: secondRegister.data.token,
+    body: { content: "Mensaje que eliminará su autor." },
+  });
+  assert.equal(secondMessageAgain.status, 201);
+
+  const deleteOwnMessage = await request(
+    `/api/groups/${createdGroup.data.group.id}/messages/${secondMessageAgain.data.message.id}`,
+    { method: "DELETE", token: secondRegister.data.token },
+  );
+  assert.equal(deleteOwnMessage.status, 204);
+
   const groupWithSession = await request(`/api/groups/${createdGroup.data.group.id}`, {
     token: secondRegister.data.token,
   });
@@ -472,7 +514,7 @@ try {
   const expired = await request("/api/auth/me", { token });
   assert.equal(expired.status, 401);
 
-  console.log("Smoke test de la API: OK (catálogo, contacto, auth, admin, espacio académico y grupos).");
+  console.log("Smoke test de la API: OK (catálogo, contacto, auth, admin, espacio académico, grupos y chat).");
 } finally {
   if (server) {
     await new Promise((resolve) => server.close(resolve));

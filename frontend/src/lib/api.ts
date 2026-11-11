@@ -165,6 +165,18 @@ export type GroupSessionInput = {
   location?: string;
 };
 
+export type GroupMessage = {
+  id: string;
+  content: string;
+  createdAt: string;
+  author: {
+    id: string;
+    name: string;
+    firstName: string;
+    initials: string;
+  };
+};
+
 export type SubjectInput = {
   name: string;
   detail: string;
@@ -278,6 +290,17 @@ export const api = {
       }),
     deleteSession: (id: string, sessionId: string) =>
       apiRequest<void>(`/api/groups/${id}/sessions/${sessionId}`, { method: "DELETE" }),
+    messages: (id: string) =>
+      apiRequest<{ messages: GroupMessage[]; hasMore: boolean; nextBefore: string | null }>(
+        `/api/groups/${id}/messages`,
+      ),
+    sendMessage: (id: string, content: string) =>
+      apiRequest<{ message: GroupMessage }>(`/api/groups/${id}/messages`, {
+        method: "POST",
+        body: { content },
+      }),
+    deleteMessage: (id: string, messageId: string) =>
+      apiRequest<void>(`/api/groups/${id}/messages/${messageId}`, { method: "DELETE" }),
   },
   workspace: {
     get: () => apiRequest<Workspace>("/api/workspace"),

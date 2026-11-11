@@ -49,6 +49,21 @@ export function serializeGroupMember(member, user) {
   };
 }
 
+export function serializeGroupMessage(message, user) {
+  const name = displayName(user);
+  return {
+    id: message._id.toString(),
+    content: message.content,
+    createdAt: message.createdAt,
+    author: {
+      id: user._id.toString(),
+      name,
+      firstName: user.firstName?.trim() || name.split(/\s+/)[0] || "Estudiante",
+      initials: initials(name),
+    },
+  };
+}
+
 export function serializeGroupSession(session) {
   const { _id, groupId, createdBy, ...rest } = session;
   return {

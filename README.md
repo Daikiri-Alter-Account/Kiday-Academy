@@ -26,7 +26,7 @@ Proyecto final del curso de desarrollo web avanzado. Frontend y backend están s
 - Registro e inicio de sesión de estudiantes con correo y contraseña.
 - Espacio académico persistente: materias y tareas se guardan en MongoDB y se aíslan por cuenta; el navegador solo conserva una caché para cargar más rápido.
 - Asistente Kiday IA conectado a un proveedor compatible con OpenAI. El backend inyecta el catálogo vigente en el prompt para que las recomendaciones sean reales.
-- Grupos de estudio persistentes: crear grupos, unirse con código, ver miembros, programar sesiones y salir o eliminar según el rol.
+- Grupos de estudio persistentes: crear grupos, unirse con código, ver miembros, programar sesiones, conversar en el chat interno y salir o eliminar según el rol.
 - Rutas de la aplicación y del panel administrativo protegidas, con fallback de SPA para GitHub Pages.
 
 ### Administración
@@ -246,6 +246,9 @@ GitHub Actions ejecuta el workflow **CI** en cada push y pull request: levanta l
 | DELETE | `/api/groups/:id` | Sesión | Elimina un grupo propio y sus datos asociados. |
 | POST | `/api/groups/:id/sessions` | Sesión | Programa una sesión; solo el creador. |
 | DELETE | `/api/groups/:id/sessions/:sessionId` | Sesión | Elimina una sesión; solo el creador. |
+| GET | `/api/groups/:id/messages` | Sesión | Devuelve los últimos mensajes del grupo. |
+| POST | `/api/groups/:id/messages` | Sesión con rate limit | Envía un mensaje al grupo. |
+| DELETE | `/api/groups/:id/messages/:messageId` | Sesión | Elimina un mensaje propio; el creador puede moderar. |
 | GET | `/api/admin/stats` | Admin | Métricas del panel. |
 | GET | `/api/admin/messages` | Admin | Lista mensajes; filtro `?status=nuevo`. |
 | PATCH | `/api/admin/messages/:id` | Admin | Cambia el estado del mensaje. |
@@ -268,7 +271,7 @@ Las rutas protegidas esperan `Authorization: Bearer <token>`. El token se guarda
 - Comprueba que `VITE_API_URL` apunte a la API desplegada y que el origen del frontend esté incluido en `CORS_ORIGIN`.
 - Después del despliegue, verifica `/api/health`, crea el administrador con el seed e inicia sesión en `/admin/login`.
 
-La API y el frontend aún figuran como pendientes de publicación. Los grupos ya son persistentes y permiten organizar sesiones; el chat interno y los materiales compartidos quedan para una siguiente etapa.
+La API y el frontend aún figuran como pendientes de publicación. Los grupos ya son persistentes, permiten organizar sesiones y tienen chat interno; los materiales compartidos quedan para una siguiente etapa.
 
 ### 1. MongoDB Atlas
 
@@ -302,7 +305,7 @@ npm run seed
 
 - Contraseñas con `scrypt` y sal aleatoria; nunca se guarda la contraseña en claro.
 - Sesiones opacas: el cliente recibe un token aleatorio y la base guarda solo su hash SHA-256, con expiración de 7 días.
-- Rate limit en registro, login, contacto y chat de IA.
+- Rate limit en registro, login, contacto, chat de IA y envío de mensajes de grupo.
 - Validación y normalización de entradas en el backend; errores internos no se filtran al cliente.
 - El catálogo público solo expone planes activos.
 - El endpoint de IA no requiere sesión para que el asistente sea accesible desde la demo, pero está limitado a 20 solicitudes cada 10 minutos por IP y a 700 tokens de salida.
@@ -315,7 +318,7 @@ Para una siguiente etapa se recomienda migrar el token a cookies `HttpOnly`, agr
 ## Roadmap
 
 - Calendario completo con vista mensual, recordatorios por email o push y notificaciones.
-- Chat interno de los grupos y comunidades por materia.
+- Notificaciones de grupo y comunidades por materia.
 - Biblioteca de materiales de estudio.
 - Historial de conversaciones del asistente y límites por plan.
 

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import {
   CalendarDays,
   Check,
@@ -7,6 +7,7 @@ import {
   LogOut,
   Plus,
   RefreshCw,
+  Send,
   Trash2,
   UserPlus,
   UsersRound,
@@ -15,15 +16,24 @@ import { Modal } from "@/components/modal";
 import {
   api,
   type GroupInput,
+  type GroupMessage,
   type GroupSessionInput,
   type StudyGroup,
 } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 
 type Editor = "create" | "join" | null;
 type LoadStatus = "loading" | "ready" | "error";
 
 const sessionFormatter = new Intl.DateTimeFormat("es-CO", {
   weekday: "short",
+  day: "numeric",
+  month: "short",
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+const messageFormatter = new Intl.DateTimeFormat("es-CO", {
   day: "numeric",
   month: "short",
   hour: "numeric",
@@ -383,6 +393,191 @@ function SessionForm({
   );
 }
 
+function GroupChat({ groupId, isOwner }: { groupId: string; isOwner: boolean }) {
+  const { user } = useAuth();
+  const [messages, setMessages] = useState<GroupMessage[]>([]);
+  const [status, setStatus] = useState<LoadStatus>("loading");
+  const [error, setError] = useState("");
+  const [content, setContent] = useState("");
+  const [sending, setSending] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const loadMessages = useCallback(
+    async (silent = false) => {
+      if (!silent) setStatus("loading");
+      try {
+        const result = await api.groups.messages(groupId);
+        setMessages(result.messages);
+        setStatus("ready");
+        setError("");
+      } catch (loadError) {
+        if (!silent) {
+          setError(messageFor(loadError, "No pudimos cargar el chat."));
+          setStatus("error");
+        }
+      }
+    },
+    [groupId],
+  );
+
+  useEffect(() => {
+    void loadMessages();
+  }, [loadMessages]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      void loadMessages(true);
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, [loadMessages]);
+
+  useEffect(() => {
+    const element = listRef.current;
+    if (element) element.scrollTop = element.scrollHeight;
+  }, [messages.length]);
+
+  async function sendMessage(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const trimmed = content.trim();
+    if (!trimmed) return;
+
+    setError("");
+    setSending(true);
+    try {
+      await api.groups.sendMessage(groupId, trimmed);
+      setContent("");
+      await loadMessages(true);
+    } catch (sendError) {
+      setError(messageFor(sendError, "No pudimos enviar el mensaje."));
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function deleteMessage(message: GroupMessage) {
+    if (!window.confirm("¿Eliminar este mensaje?")) return;
+    setError("");
+    setDeletingId(message.id);
+    try {
+      await api.groups.deleteMessage(groupId, message.id);
+      await loadMessages(true);
+    } catch (deleteError) {
+      setError(messageFor(deleteError, "No pudimos eliminar el mensaje."));
+    } finally {
+      setDeletingId(null);
+    }
+  }
+
+  return (
+    <section>
+      <div className="flex items-center justify-between gap-3">
+        <h3 className="text-xs font-semibold">Chat del grupo</h3>
+        <span className="text-[10px] text-[var(--muted)]">Se actualiza cada 5 segundos</span>
+      </div>
+
+      <div
+        ref={listRef}
+        className="mt-2 max-h-64 min-h-28 space-y-3 overflow-y-auto rounded-xl border border-[var(--border)] bg-[var(--background)] p-3"
+      >
+        {status === "loading" && (
+          <div className="space-y-2">
+            <div className="h-10 w-3/4 animate-pulse rounded-lg bg-white/5" />
+            <div className="ml-auto h-10 w-2/3 animate-pulse rounded-lg bg-white/5" />
+          </div>
+        )}
+
+        {status === "error" && (
+          <div className="py-4 text-center">
+            <p className="text-[11px] text-rose-300">{error}</p>
+            <button
+              type="button"
+              onClick={() => void loadMessages()}
+              className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-rose-400/20 px-2.5 py-1.5 text-[10px] font-medium text-rose-300 transition hover:bg-rose-500/10"
+            >
+              <RefreshCw size={12} /> Reintentar
+            </button>
+          </div>
+        )}
+
+        {status === "ready" && messages.length === 0 && (
+          <p className="py-6 text-center text-[11px] leading-5 text-[var(--muted)]">
+            Todavía no hay mensajes. Escribe el primero para empezar a coordinar.
+          </p>
+        )}
+
+        {status === "ready" &&
+          messages.map((message) => {
+            const own = message.author.id === user?.id;
+            const canDelete = own || isOwner;
+            return (
+              <div key={message.id} className={`flex items-start gap-2 ${own ? "flex-row-reverse" : ""}`}>
+                <span className="grid size-7 shrink-0 place-items-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-500 text-[9px] font-semibold text-white">
+                  {message.author.initials}
+                </span>
+                <div className={`min-w-0 max-w-[80%] ${own ? "text-right" : ""}`}>
+                  <div className={`flex items-baseline gap-2 ${own ? "justify-end" : ""}`}>
+                    <span className="truncate text-[10px] font-medium">
+                      {own ? "Tú" : message.author.firstName}
+                    </span>
+                    <span className="shrink-0 text-[9px] text-[var(--muted)]">
+                      {messageFormatter.format(new Date(message.createdAt))}
+                    </span>
+                  </div>
+                  <p
+                    className={`mt-1 whitespace-pre-wrap break-words rounded-xl border px-3 py-2 text-left text-xs leading-5 ${
+                      own
+                        ? "border-violet-400/20 bg-violet-500/15"
+                        : "border-[var(--border)] bg-white/5"
+                    }`}
+                  >
+                    {message.content}
+                  </p>
+                </div>
+                {canDelete && (
+                  <button
+                    type="button"
+                    onClick={() => void deleteMessage(message)}
+                    disabled={deletingId === message.id}
+                    aria-label={`Eliminar mensaje de ${message.author.name}`}
+                    className="mt-5 grid size-7 shrink-0 place-items-center rounded-lg text-[var(--muted)] transition hover:bg-rose-500/10 hover:text-rose-300 disabled:opacity-40"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                )}
+              </div>
+            );
+          })}
+      </div>
+
+      {error && status !== "error" && (
+        <p role="alert" className="mt-2 rounded-lg bg-rose-500/10 px-3 py-2 text-[11px] text-rose-300">
+          {error}
+        </p>
+      )}
+
+      <form onSubmit={sendMessage} className="mt-2 flex items-center gap-2">
+        <input
+          value={content}
+          onChange={(event) => setContent(event.target.value)}
+          maxLength={1000}
+          placeholder="Escribe un mensaje..."
+          aria-label="Mensaje para el grupo"
+          className="h-10 min-w-0 flex-1 rounded-lg border border-[var(--border)] bg-[var(--background)] px-3 text-sm outline-none transition focus:border-violet-400/50"
+        />
+        <button
+          type="submit"
+          disabled={sending || !content.trim()}
+          aria-label="Enviar mensaje"
+          className="grid size-10 shrink-0 place-items-center rounded-lg bg-gradient-to-r from-violet-600 to-indigo-600 text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <Send size={15} />
+        </button>
+      </form>
+    </section>
+  );
+}
+
 function GroupDetail({
   group,
   onClose,
@@ -510,6 +705,8 @@ function GroupDetail({
           ))}
         </div>
       </section>
+
+      <GroupChat groupId={group.id} isOwner={isOwner} />
 
       <section>
         <div className="flex items-center justify-between gap-3">
