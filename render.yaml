@@ -15,7 +15,7 @@ services:
       - key: MONGO_DB
         value: kiday_academy
       - key: CORS_ORIGIN
-        sync: false
+        value: https://daikiri-alter-account.github.io
       - key: ADMIN_NAME
         value: Administrador Kiday
       - key: ADMIN_EMAIL
@@ -23,8 +23,8 @@ services:
       - key: ADMIN_PASSWORD
         sync: false
       - key: AI_API_URL
-        sync: false
+        value: https://generativelanguage.googleapis.com/v1beta/openai/chat/completions
       - key: AI_API_KEY
         sync: false
       - key: AI_MODEL
-        sync: false
+        value: gemini-3.5-flash

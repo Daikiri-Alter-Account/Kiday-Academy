@@ -220,7 +220,7 @@ GitHub Actions ejecuta el workflow **CI** en cada push y pull request: levanta l
 
 | Variable | Descripción |
 | --- | --- |
-| `VITE_API_URL` | URL pública del backend, sin barra final. En local: `http://localhost:4000`. |
+| `VITE_API_URL` | URL pública del backend, sin barra final. En local usa `http://localhost:4000`; en producción el build usa `https://kiday-academy-api.onrender.com` si no se define. |
 
 ## API
 
@@ -293,7 +293,7 @@ La API y el frontend aún figuran como pendientes de publicación. Los grupos ya
 ### 2. Backend en Render
 
 1. En Render, elige **New > Blueprint** y conecta este repositorio. `render.yaml` crea el servicio `kiday-academy-api`.
-2. Define las variables marcadas con `sync: false`: `MONGO_URL`, `CORS_ORIGIN`, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `AI_API_URL`, `AI_API_KEY` y `AI_MODEL`.
+2. Define las variables marcadas con `sync: false`: `MONGO_URL`, `ADMIN_EMAIL`, `ADMIN_PASSWORD` y `AI_API_KEY`. Render ya configura `CORS_ORIGIN`, `AI_API_URL` y `AI_MODEL` desde `render.yaml`.
 3. `CORS_ORIGIN` debe incluir el origen del frontend: `https://daikiri-alter-account.github.io`.
 4. Tras el primer deploy, ejecuta el seed una vez desde la shell de Render:
 

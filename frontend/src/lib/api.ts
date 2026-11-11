@@ -1,8 +1,11 @@
 import type { Subject, SubjectStatus } from "@/data/mock";
 
 const configuredUrl = import.meta.env.VITE_API_URL?.trim();
+const fallbackUrl = import.meta.env.PROD
+  ? "https://kiday-academy-api.onrender.com"
+  : "http://localhost:4000";
 
-export const API_URL = (configuredUrl || "http://localhost:4000").replace(/\/+$/, "");
+export const API_URL = (configuredUrl || fallbackUrl).replace(/\/+$/, "");
 
 const TOKEN_KEY = "kiday-token";
 
