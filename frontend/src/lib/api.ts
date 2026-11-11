@@ -169,6 +169,27 @@ export type GradeInput = {
   subjectId?: string | null;
 };
 
+export type MaterialType = "apunte" | "pdf" | "video" | "enlace" | "ejercicio" | "libro";
+
+export type MaterialItem = {
+  id: string;
+  subjectId: string | null;
+  title: string;
+  url: string;
+  type: MaterialType;
+  description: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type MaterialInput = {
+  title: string;
+  url: string;
+  type: MaterialType;
+  description?: string;
+  subjectId?: string | null;
+};
+
 export type GroupInput = {
   name: string;
   subject: string;
@@ -297,6 +318,21 @@ export const api = {
       }),
     deleteGrade: (id: string) =>
       apiRequest<void>(`/api/grades/${id}`, { method: "DELETE" }),
+  },
+  materials: {
+    list: () => apiRequest<{ materials: MaterialItem[] }>("/api/materials"),
+    create: (payload: MaterialInput) =>
+      apiRequest<{ material: MaterialItem }>("/api/materials", {
+        method: "POST",
+        body: payload,
+      }),
+    update: (id: string, payload: Partial<MaterialInput>) =>
+      apiRequest<{ material: MaterialItem }>(`/api/materials/${id}`, {
+        method: "PATCH",
+        body: payload,
+      }),
+    deleteMaterial: (id: string) =>
+      apiRequest<void>(`/api/materials/${id}`, { method: "DELETE" }),
   },
   groups: {
     list: () => apiRequest<{ groups: StudyGroup[] }>("/api/groups"),

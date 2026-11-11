@@ -16,6 +16,7 @@ import { DashboardPage } from "@/pages/dashboard";
 import { GroupsPage } from "@/pages/groups";
 import { LandingPage } from "@/pages/landing";
 import { LoginPage } from "@/pages/login";
+import { MaterialsPage } from "@/pages/materials";
 import { NotFoundPage } from "@/pages/not-found";
 import { RegisterPage } from "@/pages/register";
 import { SubjectsPage } from "@/pages/subjects";
@@ -55,6 +56,7 @@ export function App() {
               <Route path="calendario" element={<CalendarPage />} />
               <Route path="grupos" element={<GroupsPage />} />
               <Route path="promediador" element={<AveragerPage />} />
+              <Route path="materiales" element={<MaterialsPage />} />
               <Route path="asistente" element={<AssistantPage />} />
             </Route>
           </Route>

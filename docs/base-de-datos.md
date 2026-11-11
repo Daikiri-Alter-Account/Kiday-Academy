@@ -1,6 +1,6 @@
 # Base de datos de Kiday Academy
 
-Kiday Academy usa MongoDB con la base `kiday_academy`. La estructura es intencionalmente pequeña: once colecciones, con relaciones claras entre usuarios, sesiones, materias, tareas, notas y grupos de estudio.
+Kiday Academy usa MongoDB con la base `kiday_academy`. La estructura es intencionalmente pequeña: doce colecciones, con relaciones claras entre usuarios, sesiones, materias, tareas, notas, materiales y grupos de estudio.
 
 ## Mapa rápido
 
@@ -12,6 +12,8 @@ erDiagram
     SUBJECTS ||--o{ TASKS : "agrupa"
     USERS ||--o{ GRADES : "registra"
     SUBJECTS ||--o{ GRADES : "pondera"
+    USERS ||--o{ MATERIALS : "guarda"
+    SUBJECTS ||--o{ MATERIALS : "clasifica"
     USERS ||--o{ GROUPS : "crea"
     USERS ||--o{ GROUP_MEMBERS : "participa"
     GROUPS ||--o{ GROUP_MEMBERS : "tiene"
@@ -70,6 +72,17 @@ erDiagram
         Date createdAt
         Date updatedAt
     }
+    MATERIALS {
+        ObjectId _id
+        ObjectId userId
+        ObjectId subjectId
+        string title
+        string url
+        string type
+        string description
+        Date createdAt
+        Date updatedAt
+    }
     SERVICES {
         ObjectId _id
         string slug
@@ -125,7 +138,7 @@ erDiagram
     }
 ```
 
-`SERVICES` y `MESSAGES` no dependen de `USERS`; son datos públicos del catálogo y del formulario de contacto. `SUBJECTS` y `TASKS` siempre pertenecen a un usuario y se consultan filtrando por `userId`. Los grupos tienen un creador y una membresía separada; un estudiante solo puede ver los grupos en los que participa.
+`SERVICES` y `MESSAGES` no dependen de `USERS`; son datos públicos del catálogo y del formulario de contacto. `SUBJECTS`, `TASKS`, `GRADES` y `MATERIALS` siempre pertenecen a un usuario y se consultan filtrando por `userId`. Los grupos tienen un creador y una membresía separada; un estudiante solo puede ver los grupos en los que participa.
 
 ## Colecciones
 
@@ -301,6 +314,38 @@ Ejemplo:
   "weight": 30,
   "createdAt": "2026-11-11T20:45:00.000Z",
   "updatedAt": "2026-11-11T20:45:00.000Z"
+}
+```
+
+### `materials`: biblioteca de materiales
+
+Cada material es un recurso con URL que pertenece a un estudiante y puede clasificarse por materia. La API exige la capacidad `materials`, disponible en Kiday Pro y Kiday Academy. Si se elimina la materia, sus materiales también se eliminan.
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `_id` | ObjectId | Identificador del material. |
+| `userId` | ObjectId | Referencia a `users._id`. Aísla la biblioteca por cuenta. |
+| `subjectId` | ObjectId o null | Referencia opcional a `subjects._id`. |
+| `title` | string | Título del recurso. |
+| `url` | string | Enlace `http` o `https` validado por la API. |
+| `type` | string | `apunte`, `pdf`, `video`, `enlace`, `ejercicio` o `libro`. |
+| `description` | string | Descripción opcional de hasta 300 caracteres. |
+| `createdAt` | Date | Fecha de creación. |
+| `updatedAt` | Date | Última edición. |
+
+Ejemplo:
+
+```json
+{
+  "_id": "665f23009f1b2c0012345690",
+  "userId": "665f1c2a9f1b2c0012345678",
+  "subjectId": "665f206e9f1b2c0012345682",
+  "title": "Formulario de derivadas",
+  "url": "https://example.com/derivadas",
+  "type": "pdf",
+  "description": "Resumen de reglas de derivación.",
+  "createdAt": "2026-11-11T21:00:00.000Z",
+  "updatedAt": "2026-11-11T21:00:00.000Z"
 }
 ```
 
@@ -514,6 +559,8 @@ La colección puede verse vacía hasta que alguien envíe el formulario de conta
 | `groupMessages` | `groupId + _id` | Cargar el chat de un grupo en orden y paginar. |
 | `grades` | `userId + createdAt` | Cargar las actividades del promediador. |
 | `grades` | `userId + subjectId` | Separar las notas por materia. |
+| `materials` | `userId + createdAt` | Cargar la biblioteca en orden de novedad. |
+| `materials` | `userId + subjectId` | Filtrar materiales por materia y borrarlos en cascada. |
 
 Los índices se crean automáticamente al iniciar la API mediante `ensureIndexes()` en `backend/src/db.js`.
 
@@ -527,7 +574,7 @@ Las materias y tareas ya no son la fuente de verdad del navegador. El flujo es:
 4. Cada creación, edición o eliminación se guarda en MongoDB y actualiza la interfaz.
 5. El navegador conserva una copia `kiday-study-workspace-v2:<id>` solo como caché para mostrar datos mientras sincroniza.
 
-La API nunca acepta `userId` desde el cliente: lo obtiene de la sesión. Por eso un estudiante no puede leer ni modificar materias, tareas, notas ni grupos de otra cuenta.
+La API nunca acepta `userId` desde el cliente: lo obtiene de la sesión. Por eso un estudiante no puede leer ni modificar materias, tareas, notas, materiales ni grupos de otra cuenta.
 
 ## Grupos de estudio
 
@@ -552,7 +599,7 @@ La versión anterior guardaba todo en `kiday-study-workspace-v1`. Para no perder
 
 ## Qué no está en MongoDB
 
-El historial del chat de IA no se almacena. Las conversaciones viven únicamente en el estado de la página del asistente. El chat interno de los grupos sí se guarda en `groupMessages`. El catálogo, las cuentas, las sesiones, el contacto, las materias, las tareas, las notas, los grupos y sus mensajes son datos reales del backend.
+El historial del chat de IA no se almacena. Las conversaciones viven únicamente en el estado de la página del asistente. El chat interno de los grupos sí se guarda en `groupMessages`. El catálogo, las cuentas, las sesiones, el contacto, las materias, las tareas, las notas, los materiales, los grupos y sus mensajes son datos reales del backend.
 
 ## Cómo inspeccionarla
 
@@ -582,7 +629,7 @@ El comando muestra la base, cada colección, su propósito, cantidad de document
 
 - No edites `passwordHash` ni `tokenHash` manualmente. Usa el registro, el login o el seed.
 - No cambies el `slug` de un plan sin revisar enlaces o referencias.
-- No elimines un usuario sin borrar también sus sesiones, materias, tareas, notas, membresías, mensajes y grupos que haya creado.
+- No elimines un usuario sin borrar también sus sesiones, materias, tareas, notas, materiales, membresías, mensajes y grupos que haya creado.
 - Usa el panel administrativo para editar planes y mensajes.
 - Usa la API para modificar materias, tareas y notas; así se respetan las validaciones y la separación por usuario.
 - `npm run seed` es idempotente para los planes y no duplica el administrador existente.

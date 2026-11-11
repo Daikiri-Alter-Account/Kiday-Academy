@@ -10,6 +10,7 @@ import {
   GraduationCap,
   LayoutDashboard,
   ListTodo,
+  LibraryBig,
   Loader2,
   LogOut,
   Menu,
@@ -37,6 +38,7 @@ const primaryLinks = [
 const toolLinks = [
   { label: "Asistente IA", to: "/app/asistente", icon: Sparkles },
   { label: "Promediador", to: "/app/promediador", icon: GraduationCap },
+  { label: "Materiales", to: "/app/materiales", icon: LibraryBig },
 ];
 
 const titles: Record<string, string> = {
@@ -47,6 +49,7 @@ const titles: Record<string, string> = {
   "/app/grupos": "Grupos de estudio",
   "/app/asistente": "Asistente IA",
   "/app/promediador": "Promediador",
+  "/app/materiales": "Biblioteca de materiales",
 };
 
 function navClass({ isActive }: { isActive: boolean }) {

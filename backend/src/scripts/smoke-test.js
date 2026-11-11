@@ -242,6 +242,102 @@ try {
   assert.equal(secondWorkspace.data.subjects.length, 0);
   assert.equal(secondWorkspace.data.tasks.length, 0);
 
+  const materialsUnauthorized = await request("/api/materials");
+  assert.equal(materialsUnauthorized.status, 401);
+
+  const materialsForbidden = await request("/api/materials", {
+    token: register.data.token,
+  });
+  assert.equal(materialsForbidden.status, 403);
+
+  await getDb()
+    .collection("users")
+    .updateMany(
+      { email: { $in: ["estudiante@kiday.test", "estudiante2@kiday.test"] } },
+      { $set: { plan: "kiday-pro" } },
+    );
+
+  const upgradedMe = await request("/api/auth/me", { token: register.data.token });
+  assert.equal(upgradedMe.data.user.plan, "kiday-pro");
+  assert.ok(upgradedMe.data.user.capabilities.includes("materials"));
+
+  const createdMaterial = await request("/api/materials", {
+    method: "POST",
+    token: register.data.token,
+    body: {
+      title: "Formulario de derivadas",
+      url: "https://example.com/derivadas",
+      type: "pdf",
+      description: "Resumen de reglas de derivación.",
+      subjectId: createdSubject.data.subject.id,
+    },
+  });
+  assert.equal(createdMaterial.status, 201);
+  assert.equal(createdMaterial.data.material.subjectId, createdSubject.data.subject.id);
+  assert.equal(createdMaterial.data.material.type, "pdf");
+
+  const materialList = await request("/api/materials", { token: register.data.token });
+  assert.equal(materialList.status, 200);
+  assert.equal(materialList.data.materials.length, 1);
+
+  const invalidMaterialUrl = await request("/api/materials", {
+    method: "POST",
+    token: register.data.token,
+    body: { title: "Enlace inválido", url: "javascript:alert(1)", type: "enlace" },
+  });
+  assert.equal(invalidMaterialUrl.status, 400);
+
+  const crossMaterialUpdate = await request(
+    `/api/materials/${createdMaterial.data.material.id}`,
+    {
+      method: "PATCH",
+      token: secondRegister.data.token,
+      body: { title: "Material ajeno" },
+    },
+  );
+  assert.equal(crossMaterialUpdate.status, 404);
+
+  const crossMaterialSubject = await request("/api/materials", {
+    method: "POST",
+    token: secondRegister.data.token,
+    body: {
+      title: "Material con materia ajena",
+      url: "https://example.com/ajena",
+      type: "enlace",
+      subjectId: createdSubject.data.subject.id,
+    },
+  });
+  assert.equal(crossMaterialSubject.status, 400);
+
+  const updatedMaterial = await request(
+    `/api/materials/${createdMaterial.data.material.id}`,
+    {
+      method: "PATCH",
+      token: register.data.token,
+      body: { title: "Formulario de derivadas e integrales", type: "apunte" },
+    },
+  );
+  assert.equal(updatedMaterial.status, 200);
+  assert.equal(updatedMaterial.data.material.title, "Formulario de derivadas e integrales");
+  assert.equal(updatedMaterial.data.material.type, "apunte");
+
+  const removableMaterial = await request("/api/materials", {
+    method: "POST",
+    token: register.data.token,
+    body: {
+      title: "Material temporal",
+      url: "https://example.com/temporal",
+      type: "enlace",
+    },
+  });
+  assert.equal(removableMaterial.status, 201);
+
+  const deletedMaterial = await request(
+    `/api/materials/${removableMaterial.data.material.id}`,
+    { method: "DELETE", token: register.data.token },
+  );
+  assert.equal(deletedMaterial.status, 204);
+
   const gradesUnauthorized = await request("/api/grades");
   assert.equal(gradesUnauthorized.status, 401);
 
@@ -520,6 +616,11 @@ try {
   });
   assert.equal(gradesAfterSubjectDelete.data.grades.length, 0);
 
+  const materialsAfterSubjectDelete = await request("/api/materials", {
+    token: register.data.token,
+  });
+  assert.equal(materialsAfterSubjectDelete.data.materials.length, 0);
+
   const standaloneTask = await request("/api/workspace/tasks", {
     method: "POST",
     token: register.data.token,
@@ -579,7 +680,7 @@ try {
   const expired = await request("/api/auth/me", { token });
   assert.equal(expired.status, 401);
 
-  console.log("Smoke test de la API: OK (catálogo, contacto, auth, admin, espacio académico, grupos y chat).");
+  console.log("Smoke test de la API: OK (catálogo, contacto, auth, admin, espacio académico, materiales, grupos y chat).");
 } finally {
   if (server) {
     await new Promise((resolve) => server.close(resolve));

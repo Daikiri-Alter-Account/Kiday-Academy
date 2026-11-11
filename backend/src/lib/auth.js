@@ -102,3 +102,12 @@ export function requireAdmin(req, res, next) {
   }
   next();
 }
+
+export function requireCapability(capability) {
+  return (req, res, next) => {
+    if (!req.user?.capabilities?.includes(capability)) {
+      return next(new HttpError(403, "Esta función requiere un plan superior."));
+    }
+    next();
+  };
+}

@@ -24,6 +24,7 @@ Proyecto final del curso de desarrollo web avanzado. Frontend y backend están s
 - Tareas y recordatorios con fecha de entrega, prioridad, filtros, tareas atrasadas y vista de los próximos siete días.
 - Calendario mensual que reúne tareas y sesiones de grupo, con panel de próximos eventos y recordatorios del navegador mientras la app está abierta.
 - Promediador ponderado persistente por materia, con cálculo en vivo, edición de actividades y validaciones.
+- Biblioteca de materiales para planes Pro y Academy: guarda apuntes, PDF, videos, ejercicios y enlaces, con filtros por materia y tipo.
 - Registro e inicio de sesión de estudiantes con correo y contraseña.
 - Espacio académico persistente: materias y tareas se guardan en MongoDB y se aíslan por cuenta; el navegador solo conserva una caché para cargar más rápido.
 - Asistente Kiday IA conectado a un proveedor compatible con OpenAI. El backend inyecta el catálogo vigente en el prompt para que las recomendaciones sean reales.
@@ -184,7 +185,7 @@ cd backend
 npm test
 ```
 
-El smoke test levanta una MongoDB en memoria, siembra datos y verifica catálogo, contacto, registro de estudiantes, login, sesiones, permisos, estadísticas, mensajes, CRUD de servicios, CRUD e importación del espacio académico, notas del promediador, grupos, sesiones y chat de estudio, aislamiento entre estudiantes, IA no configurada y cierre de sesión. La primera ejecución descarga el binario de MongoDB y puede tardar unos minutos.
+El smoke test levanta una MongoDB en memoria, siembra datos y verifica catálogo, contacto, registro de estudiantes, login, sesiones, permisos, estadísticas, mensajes, CRUD de servicios, CRUD e importación del espacio académico, notas del promediador, materiales, grupos, sesiones y chat de estudio, aislamiento entre estudiantes, IA no configurada y cierre de sesión. La primera ejecución descarga el binario de MongoDB y puede tardar unos minutos.
 
 Compilación del frontend:
 
@@ -235,7 +236,7 @@ GitHub Actions ejecuta el workflow **CI** en cada push y pull request: levanta l
 | POST | `/api/workspace/import` | Sesión | Migra un espacio local si la cuenta aún no tiene datos. |
 | POST | `/api/workspace/subjects` | Sesión | Crea una materia. |
 | PATCH | `/api/workspace/subjects/:id` | Sesión | Actualiza una materia propia. |
-| DELETE | `/api/workspace/subjects/:id` | Sesión | Elimina una materia propia y sus tareas. |
+| DELETE | `/api/workspace/subjects/:id` | Sesión | Elimina una materia propia y sus tareas, notas y materiales. |
 | POST | `/api/workspace/tasks` | Sesión | Crea una tarea propia. |
 | PATCH | `/api/workspace/tasks/:id` | Sesión | Actualiza una tarea propia. |
 | DELETE | `/api/workspace/tasks/:id` | Sesión | Elimina una tarea propia. |
@@ -243,6 +244,10 @@ GitHub Actions ejecuta el workflow **CI** en cada push y pull request: levanta l
 | POST | `/api/grades` | Sesión | Crea una actividad con nota y peso. |
 | PATCH | `/api/grades/:id` | Sesión | Actualiza una actividad propia. |
 | DELETE | `/api/grades/:id` | Sesión | Elimina una actividad propia. |
+| GET | `/api/materials` | Sesión con plan Pro | Devuelve la biblioteca de materiales del estudiante. |
+| POST | `/api/materials` | Sesión con plan Pro | Guarda un material con título, enlace, tipo y materia. |
+| PATCH | `/api/materials/:id` | Sesión con plan Pro | Actualiza un material propio. |
+| DELETE | `/api/materials/:id` | Sesión con plan Pro | Elimina un material propio. |
 | GET | `/api/groups` | Sesión | Lista los grupos a los que pertenece el estudiante. |
 | POST | `/api/groups` | Sesión | Crea un grupo y genera un código de invitación. |
 | POST | `/api/groups/join` | Sesión | Une al estudiante a un grupo mediante su código. |
@@ -276,7 +281,7 @@ Las rutas protegidas esperan `Authorization: Bearer <token>`. El token se guarda
 - Comprueba que `VITE_API_URL` apunte a la API desplegada y que el origen del frontend esté incluido en `CORS_ORIGIN`.
 - Después del despliegue, verifica `/api/health`, crea el administrador con el seed e inicia sesión en `/admin/login`.
 
-La API y el frontend aún figuran como pendientes de publicación. Los grupos ya son persistentes, permiten organizar sesiones y tienen chat interno; los materiales compartidos quedan para una siguiente etapa.
+La API y el frontend aún figuran como pendientes de publicación. Los grupos ya son persistentes, permiten organizar sesiones y tienen chat interno; la biblioteca de materiales es personal y los recursos compartidos entre grupos quedan para una siguiente etapa.
 
 ### 1. MongoDB Atlas
 
@@ -316,7 +321,8 @@ npm run seed
 - El endpoint de IA no requiere sesión para que el asistente sea accesible desde la demo, pero está limitado a 20 solicitudes cada 10 minutos por IP y a 700 tokens de salida.
 - Las claves de Mongo, admin e IA viven únicamente en variables de entorno del backend.
 - Los estudiantes solo acceden a `/app`; las rutas `/api/admin/*` exigen rol `admin`.
-- Las rutas `/api/workspace/*`, `/api/grades/*` y `/api/groups/*` obtienen el `userId` de la sesión y nunca aceptan un usuario enviado por el cliente, por lo que no permiten leer ni modificar datos de otra cuenta. Los detalles de un grupo solo se devuelven a sus miembros.
+- Las rutas `/api/workspace/*`, `/api/grades/*`, `/api/materials/*` y `/api/groups/*` obtienen el `userId` de la sesión y nunca aceptan un usuario enviado por el cliente, por lo que no permiten leer ni modificar datos de otra cuenta. Los detalles de un grupo solo se devuelven a sus miembros.
+- `/api/materials/*` exige la capacidad `materials`, incluida en Kiday Pro y Kiday Academy; las cuentas Free reciben `403`.
 
 Para una siguiente etapa se recomienda migrar el token a cookies `HttpOnly`, agregar verificación de email y limitar el chat a usuarios autenticados.
 
@@ -324,8 +330,8 @@ Para una siguiente etapa se recomienda migrar el token a cookies `HttpOnly`, agr
 
 - Recordatorios por email o push con servicio en segundo plano, para recibir avisos aunque la app esté cerrada.
 - Notificaciones de grupo y comunidades por materia.
-- Biblioteca de materiales de estudio.
 - Historial de conversaciones del asistente y límites por plan.
+- Materiales compartidos entre grupos y estudiantes.
 
 ## Licencia
 

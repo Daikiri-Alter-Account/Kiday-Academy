@@ -290,6 +290,7 @@ router.delete(
     await Promise.all([
       db.collection("tasks").deleteMany({ userId, subjectId }),
       db.collection("grades").deleteMany({ userId, subjectId }),
+      db.collection("materials").deleteMany({ userId, subjectId }),
     ]);
     res.status(204).end();
   }),

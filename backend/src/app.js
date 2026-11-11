@@ -2,7 +2,7 @@ import cors from "cors";
 import express from "express";
 import { config } from "./config.js";
 import { pingDatabase } from "./db.js";
-import { authenticate, requireAdmin } from "./lib/auth.js";
+import { authenticate, requireAdmin, requireCapability } from "./lib/auth.js";
 import { asyncHandler, errorHandler, notFound } from "./lib/http.js";
 import { adminRouter } from "./routes/admin.js";
 import { aiRouter } from "./routes/ai.js";
@@ -10,6 +10,7 @@ import { authRouter } from "./routes/auth.js";
 import { contactRouter } from "./routes/contact.js";
 import { gradesRouter } from "./routes/grades.js";
 import { groupsRouter } from "./routes/groups.js";
+import { materialsRouter } from "./routes/materials.js";
 import { servicesRouter } from "./routes/services.js";
 import { workspaceRouter } from "./routes/workspace.js";
 
@@ -43,6 +44,7 @@ export function createApp() {
   app.use("/api/workspace", authenticate, workspaceRouter);
   app.use("/api/groups", authenticate, groupsRouter);
   app.use("/api/grades", authenticate, gradesRouter);
+  app.use("/api/materials", authenticate, requireCapability("materials"), materialsRouter);
   app.use("/api/admin", authenticate, requireAdmin, adminRouter);
 
   app.use(notFound);
