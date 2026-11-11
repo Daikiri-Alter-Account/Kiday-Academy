@@ -1,6 +1,6 @@
 # Base de datos de Kiday Academy
 
-Kiday Academy usa MongoDB con la base `kiday_academy`. La estructura es intencionalmente pequeña: seis colecciones, con relaciones claras entre usuarios, sesiones, materias y tareas.
+Kiday Academy usa MongoDB con la base `kiday_academy`. La estructura es intencionalmente pequeña: nueve colecciones, con relaciones claras entre usuarios, sesiones, materias, tareas y grupos de estudio.
 
 ## Mapa rápido
 
@@ -10,6 +10,11 @@ erDiagram
     USERS ||--o{ SUBJECTS : "crea"
     USERS ||--o{ TASKS : "crea"
     SUBJECTS ||--o{ TASKS : "agrupa"
+    USERS ||--o{ GROUPS : "crea"
+    USERS ||--o{ GROUP_MEMBERS : "participa"
+    GROUPS ||--o{ GROUP_MEMBERS : "tiene"
+    GROUPS ||--o{ GROUP_SESSIONS : "programa"
+    USERS ||--o{ GROUP_SESSIONS : "crea"
     USERS {
         ObjectId _id
         string name
@@ -69,9 +74,37 @@ erDiagram
         string status
         Date createdAt
     }
+    GROUPS {
+        ObjectId _id
+        ObjectId ownerId
+        string name
+        string subject
+        string description
+        string inviteCode
+        string accent
+        Date createdAt
+        Date updatedAt
+    }
+    GROUP_MEMBERS {
+        ObjectId _id
+        ObjectId groupId
+        ObjectId userId
+        string role
+        Date joinedAt
+    }
+    GROUP_SESSIONS {
+        ObjectId _id
+        ObjectId groupId
+        ObjectId createdBy
+        string title
+        Date startsAt
+        number durationMinutes
+        string location
+        Date createdAt
+    }
 ```
 
-`SERVICES` y `MESSAGES` no dependen de `USERS`; son datos públicos del catálogo y del formulario de contacto. `SUBJECTS` y `TASKS` siempre pertenecen a un usuario y se consultan filtrando por `userId`.
+`SERVICES` y `MESSAGES` no dependen de `USERS`; son datos públicos del catálogo y del formulario de contacto. `SUBJECTS` y `TASKS` siempre pertenecen a un usuario y se consultan filtrando por `userId`. Los grupos tienen un creador y una membresía separada; un estudiante solo puede ver los grupos en los que participa.
 
 ## Colecciones
 
@@ -220,6 +253,92 @@ Ejemplo:
 }
 ```
 
+### `groups`: grupos de estudio
+
+Cada grupo tiene un creador, un código de invitación único y una colección de miembros. El código es la llave para unirse y no se muestra a quien no pertenece al grupo.
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `_id` | ObjectId | Identificador del grupo. |
+| `ownerId` | ObjectId | Referencia a `users._id` del creador. |
+| `name` | string | Nombre del grupo. |
+| `subject` | string | Materia o tema principal. |
+| `description` | string | Descripción opcional. |
+| `inviteCode` | string | Código único de 8 caracteres para unirse. |
+| `accent` | string | Gradiente de Tailwind usado en la tarjeta. |
+| `createdAt` | Date | Fecha de creación. |
+| `updatedAt` | Date | Última actualización del grupo o de sus sesiones. |
+
+Ejemplo:
+
+```json
+{
+  "_id": "665f220e9f1b2c0012345684",
+  "ownerId": "665f1c2a9f1b2c0012345678",
+  "name": "Cálculo sin miedo",
+  "subject": "Cálculo diferencial",
+  "description": "Repasamos derivadas y resolvemos talleres juntos.",
+  "inviteCode": "K7M2P9QX",
+  "accent": "from-violet-500 to-indigo-500",
+  "createdAt": "2026-11-11T20:30:00.000Z",
+  "updatedAt": "2026-11-11T20:30:00.000Z"
+}
+```
+
+### `groupMembers`: miembros de un grupo
+
+Relaciona usuarios con grupos. El rol `owner` se asigna al creador; los demás son `member`. El índice único impide que una cuenta se una dos veces al mismo grupo.
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `_id` | ObjectId | Identificador de la membresía. |
+| `groupId` | ObjectId | Referencia a `groups._id`. |
+| `userId` | ObjectId | Referencia a `users._id`. |
+| `role` | string | `owner` o `member`. |
+| `joinedAt` | Date | Momento en que se unió. |
+
+Ejemplo:
+
+```json
+{
+  "_id": "665f22109f1b2c0012345685",
+  "groupId": "665f220e9f1b2c0012345684",
+  "userId": "665f1c2a9f1b2c0012345678",
+  "role": "owner",
+  "joinedAt": "2026-11-11T20:30:00.000Z"
+}
+```
+
+### `groupSessions`: sesiones programadas
+
+Las sesiones son fechas futuras creadas por el dueño del grupo. La API devuelve solo las próximas sesiones y las ordena por fecha.
+
+| Campo | Tipo | Descripción |
+| --- | --- | --- |
+| `_id` | ObjectId | Identificador de la sesión. |
+| `groupId` | ObjectId | Referencia a `groups._id`. |
+| `createdBy` | ObjectId | Referencia a `users._id` que la programó. |
+| `title` | string | Tema de la sesión. |
+| `startsAt` | Date | Fecha y hora de inicio. Debe ser futura. |
+| `durationMinutes` | number | Duración entre 15 y 480 minutos. |
+| `location` | string | Lugar o enlace opcional. |
+| `createdAt` | Date | Fecha de creación. |
+
+Ejemplo:
+
+```json
+{
+  "_id": "665f22509f1b2c0012345686",
+  "groupId": "665f220e9f1b2c0012345684",
+  "createdBy": "665f1c2a9f1b2c0012345678",
+  "title": "Repaso de derivadas",
+  "startsAt": "2026-11-12T23:00:00.000Z",
+  "durationMinutes": 90,
+  "location": "Biblioteca",
+  "createdAt": "2026-11-11T20:35:00.000Z"
+}
+```
+
 ### `services`: planes del catálogo
 
 Aunque la API usa el nombre `services`, cada documento es un plan que aparece en la landing y se administra desde el panel.
@@ -311,6 +430,12 @@ La colección puede verse vacía hasta que alguien envíe el formulario de conta
 | `services` | `active + order` | Cargar el catálogo en el orden correcto. |
 | `messages` | `createdAt` descendente | Mostrar primero los mensajes recientes. |
 | `messages` | `status + createdAt` | Filtrar por estado sin perder el orden. |
+| `groups` | `inviteCode` único | Evitar códigos de invitación duplicados. |
+| `groups` | `ownerId + createdAt` | Listar los grupos creados por un usuario. |
+| `groupMembers` | `groupId + userId` único | Evitar membresías duplicadas. |
+| `groupMembers` | `userId + joinedAt` | Cargar los grupos de un estudiante. |
+| `groupMembers` | `groupId + joinedAt` | Cargar los miembros de un grupo en orden. |
+| `groupSessions` | `groupId + startsAt` | Consultar las próximas sesiones de un grupo. |
 
 Los índices se crean automáticamente al iniciar la API mediante `ensureIndexes()` en `backend/src/db.js`.
 
@@ -326,6 +451,15 @@ Las materias y tareas ya no son la fuente de verdad del navegador. El flujo es:
 
 La API nunca acepta `userId` desde el cliente: lo obtiene de la sesión. Por eso un estudiante no puede leer ni modificar materias de otra cuenta.
 
+## Grupos de estudio
+
+- `GET /api/groups` lista solo los grupos donde el estudiante tiene una membresía.
+- `POST /api/groups` crea el grupo y la membresía `owner` en la misma operación.
+- `POST /api/groups/join` normaliza el código, valida el límite de 50 miembros y evita duplicados.
+- `GET /api/groups/:id` exige membresía; un estudiante ajeno recibe `404`.
+- Solo el creador puede programar o eliminar sesiones, y solo él puede eliminar el grupo.
+- Al eliminar un grupo se borran también sus membresías y sesiones.
+
 ### Migración desde la versión local
 
 La versión anterior guardaba todo en `kiday-study-workspace-v1`. Para no perder esos datos:
@@ -338,7 +472,7 @@ La versión anterior guardaba todo en `kiday-study-workspace-v1`. Para no perder
 
 ## Qué no está en MongoDB
 
-El historial del chat de IA no se almacena. Las conversaciones viven únicamente en el estado de la página del asistente. El catálogo, las cuentas, las sesiones, el contacto, las materias y las tareas sí son datos reales del backend.
+El historial del chat de IA no se almacena. Las conversaciones viven únicamente en el estado de la página del asistente. El chat interno de los grupos todavía no está implementado; cuando se agregue, sus mensajes deberán persistirse en MongoDB. El catálogo, las cuentas, las sesiones, el contacto, las materias, las tareas y los grupos sí son datos reales del backend.
 
 ## Cómo inspeccionarla
 
@@ -368,7 +502,7 @@ El comando muestra la base, cada colección, su propósito, cantidad de document
 
 - No edites `passwordHash` ni `tokenHash` manualmente. Usa el registro, el login o el seed.
 - No cambies el `slug` de un plan sin revisar enlaces o referencias.
-- No elimines un usuario sin borrar también sus sesiones, materias y tareas.
+- No elimines un usuario sin borrar también sus sesiones, materias, tareas, membresías y grupos que haya creado.
 - Usa el panel administrativo para editar planes y mensajes.
 - Usa la API para modificar materias y tareas; así se respetan las validaciones y la separación por usuario.
 - `npm run seed` es idempotente para los planes y no duplica el administrador existente.

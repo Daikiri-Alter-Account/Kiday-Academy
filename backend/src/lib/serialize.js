@@ -21,3 +21,53 @@ export function serializeTask(task) {
     ...rest,
   };
 }
+
+function displayName(user) {
+  return (
+    user.name?.trim() ||
+    [user.firstName, user.lastName].filter(Boolean).join(" ").trim() ||
+    "Estudiante"
+  );
+}
+
+function initials(name) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "?";
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+}
+
+export function serializeGroupMember(member, user) {
+  const name = displayName(user);
+  return {
+    id: user._id.toString(),
+    name,
+    firstName: user.firstName?.trim() || name.split(/\s+/)[0] || "Estudiante",
+    initials: initials(name),
+    role: member.role,
+    joinedAt: member.joinedAt,
+  };
+}
+
+export function serializeGroupSession(session) {
+  const { _id, groupId, createdBy, ...rest } = session;
+  return {
+    id: _id.toString(),
+    createdBy: createdBy ? createdBy.toString() : null,
+    ...rest,
+  };
+}
+
+export function serializeGroup(group, { role, memberCount = 0, members = [], sessions = [] } = {}) {
+  const { _id, ownerId, ...rest } = group;
+  return {
+    id: _id.toString(),
+    ownerId: ownerId.toString(),
+    role,
+    memberCount,
+    members,
+    sessions,
+    nextSession: sessions[0] ?? null,
+    ...rest,
+  };
+}

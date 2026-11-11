@@ -242,6 +242,111 @@ try {
   assert.equal(secondWorkspace.data.subjects.length, 0);
   assert.equal(secondWorkspace.data.tasks.length, 0);
 
+  const groupsUnauthorized = await request("/api/groups");
+  assert.equal(groupsUnauthorized.status, 401);
+
+  const createdGroup = await request("/api/groups", {
+    method: "POST",
+    token: register.data.token,
+    body: {
+      name: "Cálculo sin miedo",
+      subject: "Cálculo diferencial",
+      description: "Repasamos derivadas y resolvemos talleres juntos.",
+    },
+  });
+  assert.equal(createdGroup.status, 201);
+  assert.equal(createdGroup.data.group.role, "owner");
+  assert.equal(createdGroup.data.group.memberCount, 1);
+  assert.equal(createdGroup.data.group.members[0].role, "owner");
+  assert.equal(createdGroup.data.group.inviteCode.length, 8);
+  assert.ok(createdGroup.data.group.id);
+
+  const firstGroups = await request("/api/groups", { token: register.data.token });
+  assert.equal(firstGroups.status, 200);
+  assert.equal(firstGroups.data.groups.length, 1);
+  assert.equal(firstGroups.data.groups[0].role, "owner");
+
+  const invalidGroupCode = await request("/api/groups/join", {
+    method: "POST",
+    token: secondRegister.data.token,
+    body: { code: "ZZZZZZZZ" },
+  });
+  assert.equal(invalidGroupCode.status, 404);
+
+  const joinedGroup = await request("/api/groups/join", {
+    method: "POST",
+    token: secondRegister.data.token,
+    body: { code: createdGroup.data.group.inviteCode },
+  });
+  assert.equal(joinedGroup.status, 200);
+  assert.equal(joinedGroup.data.group.role, "member");
+  assert.equal(joinedGroup.data.group.memberCount, 2);
+
+  const groupDetail = await request(`/api/groups/${createdGroup.data.group.id}`, {
+    token: register.data.token,
+  });
+  assert.equal(groupDetail.status, 200);
+  assert.equal(groupDetail.data.group.memberCount, 2);
+  assert.equal(groupDetail.data.group.members.length, 2);
+
+  const memberSession = await request(`/api/groups/${createdGroup.data.group.id}/sessions`, {
+    method: "POST",
+    token: secondRegister.data.token,
+    body: {
+      title: "Repaso de derivadas",
+      startsAt: new Date(Date.now() + 86_400_000).toISOString(),
+      durationMinutes: 90,
+      location: "Biblioteca",
+    },
+  });
+  assert.equal(memberSession.status, 403);
+
+  const createdSession = await request(`/api/groups/${createdGroup.data.group.id}/sessions`, {
+    method: "POST",
+    token: register.data.token,
+    body: {
+      title: "Repaso de derivadas",
+      startsAt: new Date(Date.now() + 86_400_000).toISOString(),
+      durationMinutes: 90,
+      location: "Biblioteca",
+    },
+  });
+  assert.equal(createdSession.status, 201);
+  assert.equal(createdSession.data.session.title, "Repaso de derivadas");
+  assert.equal(createdSession.data.session.durationMinutes, 90);
+
+  const groupWithSession = await request(`/api/groups/${createdGroup.data.group.id}`, {
+    token: secondRegister.data.token,
+  });
+  assert.equal(groupWithSession.status, 200);
+  assert.equal(groupWithSession.data.group.nextSession.id, createdSession.data.session.id);
+
+  const ownerLeave = await request(`/api/groups/${createdGroup.data.group.id}/leave`, {
+    method: "POST",
+    token: register.data.token,
+  });
+  assert.equal(ownerLeave.status, 400);
+
+  const memberLeave = await request(`/api/groups/${createdGroup.data.group.id}/leave`, {
+    method: "POST",
+    token: secondRegister.data.token,
+  });
+  assert.equal(memberLeave.status, 204);
+
+  const leftGroup = await request(`/api/groups/${createdGroup.data.group.id}`, {
+    token: secondRegister.data.token,
+  });
+  assert.equal(leftGroup.status, 404);
+
+  const deletedGroup = await request(`/api/groups/${createdGroup.data.group.id}`, {
+    method: "DELETE",
+    token: register.data.token,
+  });
+  assert.equal(deletedGroup.status, 204);
+
+  const groupsAfterDelete = await request("/api/groups", { token: register.data.token });
+  assert.equal(groupsAfterDelete.data.groups.length, 0);
+
   const crossSubjectUpdate = await request(
     `/api/workspace/subjects/${createdSubject.data.subject.id}`,
     {
@@ -367,7 +472,7 @@ try {
   const expired = await request("/api/auth/me", { token });
   assert.equal(expired.status, 401);
 
-  console.log("Smoke test de la API: OK (catálogo, contacto, auth, admin y espacio académico).");
+  console.log("Smoke test de la API: OK (catálogo, contacto, auth, admin, espacio académico y grupos).");
 } finally {
   if (server) {
     await new Promise((resolve) => server.close(resolve));

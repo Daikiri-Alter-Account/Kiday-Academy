@@ -1,6 +1,6 @@
 # Kiday Academy
 
-Plataforma web para estudiantes de colegio, universidad y aprendizaje autónomo. Kiday reúne organización académica, herramientas de estudio, un catálogo de planes, un formulario de contacto real, un panel administrativo y un asistente con IA.
+Plataforma web para estudiantes de colegio, universidad y aprendizaje autónomo. Kiday reúne organización académica, herramientas de estudio, un catálogo de planes, contacto conectado al panel administrativo y un asistente con IA.
 
 [![CI](https://github.com/Daikiri-Alter-Account/Kiday-Academy/actions/workflows/ci.yml/badge.svg)](https://github.com/Daikiri-Alter-Account/Kiday-Academy/actions/workflows/ci.yml)
 
@@ -15,7 +15,7 @@ Proyecto final del curso de desarrollo web avanzado. Frontend y backend están s
 ### Sitio público
 - Landing responsive con identidad de marca, propuesta de valor y vista previa del producto.
 - Catálogo de planes conectado a MongoDB (`/api/services`), con estados de carga, error y reintento.
-- Formulario de contacto real con validación en cliente y servidor, rate limit y confirmación de envío.
+- Formulario de contacto con validación en cliente y servidor; los mensajes se guardan en MongoDB y aparecen en el panel administrativo.
 - Metadatos SEO, datos estructurados, iconos, manifiesto y tema claro/oscuro persistente.
 
 ### Aplicación académica
@@ -26,6 +26,7 @@ Proyecto final del curso de desarrollo web avanzado. Frontend y backend están s
 - Registro e inicio de sesión de estudiantes con correo y contraseña.
 - Espacio académico persistente: materias y tareas se guardan en MongoDB y se aíslan por cuenta; el navegador solo conserva una caché para cargar más rápido.
 - Asistente Kiday IA conectado a un proveedor compatible con OpenAI. El backend inyecta el catálogo vigente en el prompt para que las recomendaciones sean reales.
+- Grupos de estudio persistentes: crear grupos, unirse con código, ver miembros, programar sesiones y salir o eliminar según el rol.
 - Rutas de la aplicación y del panel administrativo protegidas, con fallback de SPA para GitHub Pages.
 
 ### Administración
@@ -61,7 +62,7 @@ No se usan librerías de UI, estado global ni autenticación de terceros. La aut
 ├── backend/                  # API Express
 │   └── src/
 │       ├── lib/              # auth, validación, rate limit, errores
-│       ├── routes/           # services, contact, auth, admin, ai, workspace
+│       ├── routes/           # services, contact, auth, admin, ai, workspace, groups
 │       ├── scripts/          # seed, smoke test e inspector de base de datos
 │       └── seed.js           # datos iniciales
 ├── docs/                     # documentación de la base de datos
@@ -182,7 +183,7 @@ cd backend
 npm test
 ```
 
-El smoke test levanta una MongoDB en memoria, siembra datos y verifica catálogo, contacto, registro de estudiantes, login, sesiones, permisos, estadísticas, mensajes, CRUD de servicios, CRUD e importación del espacio académico, aislamiento entre estudiantes, IA no configurada y cierre de sesión. La primera ejecución descarga el binario de MongoDB y puede tardar unos minutos.
+El smoke test levanta una MongoDB en memoria, siembra datos y verifica catálogo, contacto, registro de estudiantes, login, sesiones, permisos, estadísticas, mensajes, CRUD de servicios, CRUD e importación del espacio académico, grupos y sesiones de estudio, aislamiento entre estudiantes, IA no configurada y cierre de sesión. La primera ejecución descarga el binario de MongoDB y puede tardar unos minutos.
 
 Compilación del frontend:
 
@@ -237,6 +238,14 @@ GitHub Actions ejecuta el workflow **CI** en cada push y pull request: levanta l
 | POST | `/api/workspace/tasks` | Sesión | Crea una tarea propia. |
 | PATCH | `/api/workspace/tasks/:id` | Sesión | Actualiza una tarea propia. |
 | DELETE | `/api/workspace/tasks/:id` | Sesión | Elimina una tarea propia. |
+| GET | `/api/groups` | Sesión | Lista los grupos a los que pertenece el estudiante. |
+| POST | `/api/groups` | Sesión | Crea un grupo y genera un código de invitación. |
+| POST | `/api/groups/join` | Sesión | Une al estudiante a un grupo mediante su código. |
+| GET | `/api/groups/:id` | Sesión | Devuelve el grupo, sus miembros y próximas sesiones. |
+| POST | `/api/groups/:id/leave` | Sesión | Sale de un grupo; el creador no puede salir. |
+| DELETE | `/api/groups/:id` | Sesión | Elimina un grupo propio y sus datos asociados. |
+| POST | `/api/groups/:id/sessions` | Sesión | Programa una sesión; solo el creador. |
+| DELETE | `/api/groups/:id/sessions/:sessionId` | Sesión | Elimina una sesión; solo el creador. |
 | GET | `/api/admin/stats` | Admin | Métricas del panel. |
 | GET | `/api/admin/messages` | Admin | Lista mensajes; filtro `?status=nuevo`. |
 | PATCH | `/api/admin/messages/:id` | Admin | Cambia el estado del mensaje. |
@@ -250,6 +259,16 @@ GitHub Actions ejecuta el workflow **CI** en cada push y pull request: levanta l
 Las rutas protegidas esperan `Authorization: Bearer <token>`. El token se guarda en `localStorage` con la clave `kiday-token`.
 
 ## Despliegue
+
+### Antes de abrir el sitio al público
+
+- Publica una política de privacidad accesible desde el registro y el pie de página. La app recopila correo, fecha de nacimiento, institución y grado, además de materias, tareas y mensajes de contacto.
+- Confirma el correo público de contacto y cómo se atenderán los mensajes. El formulario los guarda en MongoDB y el equipo debe revisarlos desde `/admin/mensajes`; no envía notificaciones por correo.
+- Configura `MONGO_URL`, `CORS_ORIGIN`, `ADMIN_EMAIL` y una contraseña de administrador segura en Render. Añade `AI_API_KEY` solo si el asistente estará disponible.
+- Comprueba que `VITE_API_URL` apunte a la API desplegada y que el origen del frontend esté incluido en `CORS_ORIGIN`.
+- Después del despliegue, verifica `/api/health`, crea el administrador con el seed e inicia sesión en `/admin/login`.
+
+La API y el frontend aún figuran como pendientes de publicación. Los grupos ya son persistentes y permiten organizar sesiones; el chat interno y los materiales compartidos quedan para una siguiente etapa.
 
 ### 1. MongoDB Atlas
 
@@ -289,14 +308,14 @@ npm run seed
 - El endpoint de IA no requiere sesión para que el asistente sea accesible desde la demo, pero está limitado a 20 solicitudes cada 10 minutos por IP y a 700 tokens de salida.
 - Las claves de Mongo, admin e IA viven únicamente en variables de entorno del backend.
 - Los estudiantes solo acceden a `/app`; las rutas `/api/admin/*` exigen rol `admin`.
-- Las rutas `/api/workspace/*` obtienen el `userId` de la sesión y nunca aceptan un usuario enviado por el cliente, por lo que no permiten leer ni modificar datos de otra cuenta.
+- Las rutas `/api/workspace/*` y `/api/groups/*` obtienen el `userId` de la sesión y nunca aceptan un usuario enviado por el cliente, por lo que no permiten leer ni modificar datos de otra cuenta. Los detalles de un grupo solo se devuelven a sus miembros.
 
 Para una siguiente etapa se recomienda migrar el token a cookies `HttpOnly`, agregar verificación de email y limitar el chat a usuarios autenticados.
 
 ## Roadmap
 
 - Calendario completo con vista mensual, recordatorios por email o push y notificaciones.
-- Comunidades por materia y chats privados.
+- Chat interno de los grupos y comunidades por materia.
 - Biblioteca de materiales de estudio.
 - Historial de conversaciones del asistente y límites por plan.
 

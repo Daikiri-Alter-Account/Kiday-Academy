@@ -47,5 +47,11 @@ async function ensureIndexes(db) {
     db.collection("tasks").createIndex({ userId: 1, dueDate: 1 }),
     db.collection("tasks").createIndex({ userId: 1, done: 1 }),
     db.collection("tasks").createIndex({ userId: 1, subjectId: 1 }),
+    db.collection("groups").createIndex({ inviteCode: 1 }, { unique: true }),
+    db.collection("groups").createIndex({ ownerId: 1, createdAt: -1 }),
+    db.collection("groupMembers").createIndex({ groupId: 1, userId: 1 }, { unique: true }),
+    db.collection("groupMembers").createIndex({ userId: 1, joinedAt: 1 }),
+    db.collection("groupMembers").createIndex({ groupId: 1, joinedAt: 1 }),
+    db.collection("groupSessions").createIndex({ groupId: 1, startsAt: 1 }),
   ]);
 }

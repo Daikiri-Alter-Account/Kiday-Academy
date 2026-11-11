@@ -114,6 +114,57 @@ export type Workspace = {
   tasks: WorkspaceTask[];
 };
 
+export type GroupRole = "owner" | "member";
+
+export type StudyGroupMember = {
+  id: string;
+  name: string;
+  firstName: string;
+  initials: string;
+  role: GroupRole;
+  joinedAt: string;
+};
+
+export type GroupSession = {
+  id: string;
+  title: string;
+  startsAt: string;
+  durationMinutes: number;
+  location: string;
+  createdBy: string | null;
+  createdAt?: string;
+};
+
+export type StudyGroup = {
+  id: string;
+  name: string;
+  subject: string;
+  description: string;
+  inviteCode: string;
+  accent: string;
+  ownerId: string;
+  role: GroupRole;
+  memberCount: number;
+  members: StudyGroupMember[];
+  sessions: GroupSession[];
+  nextSession: GroupSession | null;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type GroupInput = {
+  name: string;
+  subject: string;
+  description?: string;
+};
+
+export type GroupSessionInput = {
+  title: string;
+  startsAt: string;
+  durationMinutes: number;
+  location?: string;
+};
+
 export type SubjectInput = {
   name: string;
   detail: string;
@@ -203,6 +254,31 @@ export const api = {
       method: "POST",
       body: { messages },
     }),
+  groups: {
+    list: () => apiRequest<{ groups: StudyGroup[] }>("/api/groups"),
+    get: (id: string) => apiRequest<{ group: StudyGroup }>(`/api/groups/${id}`),
+    create: (payload: GroupInput) =>
+      apiRequest<{ group: StudyGroup }>("/api/groups", {
+        method: "POST",
+        body: payload,
+      }),
+    join: (code: string) =>
+      apiRequest<{ group: StudyGroup }>("/api/groups/join", {
+        method: "POST",
+        body: { code },
+      }),
+    leave: (id: string) =>
+      apiRequest<void>(`/api/groups/${id}/leave`, { method: "POST" }),
+    deleteGroup: (id: string) =>
+      apiRequest<void>(`/api/groups/${id}`, { method: "DELETE" }),
+    createSession: (id: string, payload: GroupSessionInput) =>
+      apiRequest<{ session: GroupSession }>(`/api/groups/${id}/sessions`, {
+        method: "POST",
+        body: payload,
+      }),
+    deleteSession: (id: string, sessionId: string) =>
+      apiRequest<void>(`/api/groups/${id}/sessions/${sessionId}`, { method: "DELETE" }),
+  },
   workspace: {
     get: () => apiRequest<Workspace>("/api/workspace"),
     importWorkspace: (payload: { subjects: Subject[]; tasks: WorkspaceTask[] }) =>
