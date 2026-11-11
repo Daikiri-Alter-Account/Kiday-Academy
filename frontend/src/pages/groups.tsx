@@ -13,6 +13,7 @@ import {
   UsersRound,
 } from "lucide-react";
 import { Modal } from "@/components/modal";
+import { PlanGate } from "@/components/plan-gate";
 import {
   api,
   type GroupInput,
@@ -21,6 +22,7 @@ import {
   type StudyGroup,
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { hasCapability } from "@/lib/plans";
 
 type Editor = "create" | "join" | null;
 type LoadStatus = "loading" | "ready" | "error";
@@ -873,6 +875,8 @@ function GroupCard({ group, onOpen }: { group: StudyGroup; onOpen: () => void })
 }
 
 export function GroupsPage() {
+  const { user } = useAuth();
+  const canUse = hasCapability(user, "groups");
   const [groups, setGroups] = useState<StudyGroup[]>([]);
   const [status, setStatus] = useState<LoadStatus>("loading");
   const [error, setError] = useState("");
@@ -906,8 +910,13 @@ export function GroupsPage() {
   }, []);
 
   useEffect(() => {
-    void loadGroups();
-  }, [loadGroups]);
+    if (canUse) {
+      void loadGroups();
+    } else {
+      setGroups([]);
+      setStatus("ready");
+    }
+  }, [canUse, loadGroups]);
 
   useEffect(() => {
     if (!selectedId) {
@@ -937,6 +946,30 @@ export function GroupsPage() {
       active = false;
     };
   }, [selectedId, detailReloadKey]);
+
+  if (!canUse) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Grupos de estudio</h2>
+          <p className="mt-1 text-sm text-[var(--muted)]">
+            Crea espacios para estudiar en equipo, invita a tus compañeros y organicen sesiones.
+          </p>
+        </div>
+        <PlanGate
+          requiredPlan="kiday-academy"
+          title="Estudiar en equipo es parte de Kiday Academy"
+          description="Desbloquea grupos ilimitados, sesiones compartidas, chat interno y moderación para organizar tu estudio con tus compañeros."
+          benefits={[
+            "Grupos con código de invitación",
+            "Sesiones y recordatorios compartidos",
+            "Chat interno del grupo",
+            "Roles de creador y moderación",
+          ]}
+        />
+      </div>
+    );
+  }
 
   async function createGroup(payload: GroupInput) {
     const { group } = await api.groups.create(payload);

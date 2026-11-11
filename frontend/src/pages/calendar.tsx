@@ -8,11 +8,14 @@ import {
   ChevronRight,
   Clock3,
   ListTodo,
+  LockKeyhole,
   Plus,
   RefreshCw,
   UsersRound,
 } from "lucide-react";
 import { api, type StudyGroup } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { hasCapability } from "@/lib/plans";
 import { parseLocalDate, todayIso, useStudy } from "@/lib/study-store";
 
 type CalendarEvent = {
@@ -73,7 +76,10 @@ function eventSortValue(event: CalendarEvent) {
 }
 
 export function CalendarPage() {
+  const { user } = useAuth();
   const { subjects, tasks } = useStudy();
+  const canUseGroups = hasCapability(user, "groups");
+  const canUseReminders = hasCapability(user, "smart-reminders");
   const [groups, setGroups] = useState<StudyGroup[]>([]);
   const [groupsStatus, setGroupsStatus] = useState<LoadStatus>("loading");
   const [error, setError] = useState("");
@@ -88,6 +94,13 @@ export function CalendarPage() {
   const [notice, setNotice] = useState("");
 
   const loadGroups = useCallback(async () => {
+    if (!canUseGroups) {
+      setGroups([]);
+      setGroupsStatus("ready");
+      setError("");
+      return;
+    }
+
     setGroupsStatus("loading");
     setError("");
     try {
@@ -98,7 +111,7 @@ export function CalendarPage() {
       setError(messageFor(loadError, "No pudimos cargar las sesiones de tus grupos."));
       setGroupsStatus("error");
     }
-  }, []);
+  }, [canUseGroups]);
 
   useEffect(() => {
     void loadGroups();
@@ -151,7 +164,7 @@ export function CalendarPage() {
   }, [events]);
 
   useEffect(() => {
-    if (permission !== "granted") return;
+    if (permission !== "granted" || !canUseReminders) return;
 
     function checkReminders() {
       const now = Date.now();
@@ -202,9 +215,14 @@ export function CalendarPage() {
     checkReminders();
     const timer = window.setInterval(checkReminders, 60_000);
     return () => window.clearInterval(timer);
-  }, [events, permission]);
+  }, [canUseReminders, events, permission]);
 
   async function enableNotifications() {
+    if (!canUseReminders) {
+      setNotice("Los recordatorios inteligentes forman parte de Kiday Pro.");
+      return;
+    }
+
     if (typeof Notification === "undefined") {
       setNotice("Tu navegador no permite notificaciones.");
       return;
@@ -251,14 +269,23 @@ export function CalendarPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={() => void enableNotifications()}
-            className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-medium text-[var(--muted)] transition hover:bg-white/5 hover:text-[var(--foreground)]"
-          >
-            {permission === "granted" ? <BellRing size={16} className="text-emerald-300" /> : <Bell size={16} />}
-            {permission === "granted" ? "Recordatorios activos" : "Activar recordatorios"}
-          </button>
+          {canUseReminders ? (
+            <button
+              type="button"
+              onClick={() => void enableNotifications()}
+              className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-medium text-[var(--muted)] transition hover:bg-white/5 hover:text-[var(--foreground)]"
+            >
+              {permission === "granted" ? <BellRing size={16} className="text-emerald-300" /> : <Bell size={16} />}
+              {permission === "granted" ? "Recordatorios activos" : "Activar recordatorios"}
+            </button>
+          ) : (
+            <Link
+              to="/app/planes"
+              className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] px-4 py-2.5 text-sm font-medium text-[var(--muted)] transition hover:bg-white/5 hover:text-[var(--foreground)]"
+            >
+              <LockKeyhole size={16} /> Recordatorios Pro
+            </Link>
+          )}
           <Link
             to="/app/tareas"
             className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-violet-950/40 transition hover:-translate-y-0.5"
@@ -487,23 +514,50 @@ export function CalendarPage() {
                 No tienes eventos próximos.
               </p>
             )}
+
+            {!canUseGroups && (
+              <Link
+                to="/app/planes"
+                className="mt-3 flex items-center justify-between gap-2 rounded-xl border border-sky-400/15 bg-sky-400/[0.06] px-3 py-2.5 text-[10px] font-medium text-sky-200 transition hover:bg-sky-400/10"
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  <LockKeyhole size={12} /> Las sesiones de grupo son parte de Academy
+                </span>
+                <ChevronRight size={12} />
+              </Link>
+            )}
           </section>
 
-          <section className="rounded-2xl border border-violet-400/15 bg-gradient-to-br from-violet-500/[0.12] to-indigo-500/[0.05] p-4 sm:p-5">
-            <h3 className="text-xs font-semibold">Recordatorios</h3>
-            <p className="mt-2 text-[11px] leading-5 text-[var(--muted)]">
-              Activa las notificaciones para recibir avisos de tareas y sesiones durante las próximas 24 horas
-              mientras la app esté abierta.
-            </p>
-            <button
-              type="button"
-              onClick={() => void enableNotifications()}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-violet-400/20 bg-violet-500/10 px-3 py-2 text-[11px] font-medium text-violet-200 transition hover:bg-violet-500/20"
-            >
-              {permission === "granted" ? <BellRing size={13} /> : <Bell size={13} />}
-              {permission === "granted" ? "Notificaciones activas" : "Activar notificaciones"}
-            </button>
-          </section>
+          {canUseReminders ? (
+            <section className="rounded-2xl border border-violet-400/15 bg-gradient-to-br from-violet-500/[0.12] to-indigo-500/[0.05] p-4 sm:p-5">
+              <h3 className="text-xs font-semibold">Recordatorios</h3>
+              <p className="mt-2 text-[11px] leading-5 text-[var(--muted)]">
+                Activa las notificaciones para recibir avisos de tareas y sesiones durante las próximas 24 horas
+                mientras la app esté abierta.
+              </p>
+              <button
+                type="button"
+                onClick={() => void enableNotifications()}
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-violet-400/20 bg-violet-500/10 px-3 py-2 text-[11px] font-medium text-violet-200 transition hover:bg-violet-500/20"
+              >
+                {permission === "granted" ? <BellRing size={13} /> : <Bell size={13} />}
+                {permission === "granted" ? "Notificaciones activas" : "Activar notificaciones"}
+              </button>
+            </section>
+          ) : (
+            <section className="rounded-2xl border border-amber-400/15 bg-gradient-to-br from-amber-500/[0.1] to-orange-500/[0.04] p-4 sm:p-5">
+              <h3 className="text-xs font-semibold">Recordatorios inteligentes</h3>
+              <p className="mt-2 text-[11px] leading-5 text-[var(--muted)]">
+                Recibe avisos de tareas y sesiones durante las próximas 24 horas. Disponible en Kiday Pro y Academy.
+              </p>
+              <Link
+                to="/app/planes"
+                className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-amber-400/20 bg-amber-400/10 px-3 py-2 text-[11px] font-medium text-amber-200 transition hover:bg-amber-400/15"
+              >
+                <LockKeyhole size={13} /> Ver planes
+              </Link>
+            </section>
+          )}
         </aside>
       </div>
     </div>

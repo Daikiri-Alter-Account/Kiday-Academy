@@ -193,6 +193,18 @@ cd backend
 npm run plan:set -- correo@ejemplo.com kiday-academy
 ```
 
+### Capacidades por plan
+
+La API traduce el plan a una lista de capacidades en `publicUser()`. Los endpoints sensibles las validan con `requireCapability`, así que un plan inferior recibe `403` aunque conozca la ruta.
+
+| Plan | Capacidades |
+| --- | --- |
+| `kiday-free` | `subjects`, `tasks`, `averager`, `calendar` |
+| `kiday-pro` | Free + `assistant`, `materials`, `smart-reminders` |
+| `kiday-academy` | Pro + `groups`, `private-chats`, `mentoring`, `academic-tracking` |
+
+Los grupos de estudio y su chat requieren `groups`; Kiday IA requiere `assistant`; la biblioteca requiere `materials`. El calendario y el promediador están disponibles desde Free, pero los recordatorios inteligentes del calendario se muestran solo a Pro y Academy.
+
 ### `sessions`: sesiones activas
 
 Cada inicio de sesión crea un documento. El cliente recibe un token aleatorio; la base solo guarda su hash.
@@ -578,6 +590,7 @@ La API nunca acepta `userId` desde el cliente: lo obtiene de la sesión. Por eso
 
 ## Grupos de estudio
 
+- Todas las rutas de grupos y su chat requieren la capacidad `groups` (Kiday Academy).
 - `GET /api/groups` lista solo los grupos donde el estudiante tiene una membresía.
 - `POST /api/groups` crea el grupo y la membresía `owner` en la misma operación.
 - `POST /api/groups/join` normaliza el código, valida el límite de 50 miembros y evita duplicados.

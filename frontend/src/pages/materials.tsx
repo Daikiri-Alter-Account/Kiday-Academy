@@ -349,7 +349,7 @@ export function MaterialsPage() {
               ))}
             </div>
             <Link
-              to="/#planes"
+              to="/app/planes"
               className="mt-7 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 px-5 py-2.5 text-sm font-semibold text-white shadow-lg shadow-amber-950/30 transition hover:-translate-y-0.5"
             >
               Ver planes <ArrowRight size={15} />

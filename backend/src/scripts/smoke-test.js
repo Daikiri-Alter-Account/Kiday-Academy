@@ -401,6 +401,20 @@ try {
   const groupsUnauthorized = await request("/api/groups");
   assert.equal(groupsUnauthorized.status, 401);
 
+  const groupsForbidden = await request("/api/groups", { token: register.data.token });
+  assert.equal(groupsForbidden.status, 403);
+
+  await getDb()
+    .collection("users")
+    .updateMany(
+      { email: { $in: ["estudiante@kiday.test", "estudiante2@kiday.test"] } },
+      { $set: { plan: "kiday-academy" } },
+    );
+
+  const academyMe = await request("/api/auth/me", { token: register.data.token });
+  assert.equal(academyMe.data.user.plan, "kiday-academy");
+  assert.ok(academyMe.data.user.capabilities.includes("groups"));
+
   const createdGroup = await request("/api/groups", {
     method: "POST",
     token: register.data.token,
@@ -667,8 +681,22 @@ try {
   const publicCatalog = await request("/api/services");
   assert.equal(publicCatalog.data.services.length, 4);
 
+  const aiUnauthorized = await request("/api/ai/chat", {
+    method: "POST",
+    body: { messages: [{ role: "user", content: "¿Qué plan me recomiendas?" }] },
+  });
+  assert.equal(aiUnauthorized.status, 401);
+
+  const aiForbidden = await request("/api/ai/chat", {
+    method: "POST",
+    token,
+    body: { messages: [{ role: "user", content: "¿Qué plan me recomiendas?" }] },
+  });
+  assert.equal(aiForbidden.status, 403);
+
   const ai = await request("/api/ai/chat", {
     method: "POST",
+    token: register.data.token,
     body: { messages: [{ role: "user", content: "¿Qué plan me recomiendas?" }] },
   });
   assert.equal(ai.status, 503);

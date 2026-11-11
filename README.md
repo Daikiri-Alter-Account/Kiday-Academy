@@ -22,13 +22,14 @@ Proyecto final del curso de desarrollo web avanzado. Frontend y backend están s
 - Panel con métricas derivadas de las materias y tareas reales, accesos rápidos y resumen de la semana.
 - CRUD de materias con promedio, estado y avance de actividades. Eliminar una materia también elimina sus tareas.
 - Tareas y recordatorios con fecha de entrega, prioridad, filtros, tareas atrasadas y vista de los próximos siete días.
-- Calendario mensual que reúne tareas y sesiones de grupo, con panel de próximos eventos y recordatorios del navegador mientras la app está abierta.
+- Calendario mensual que reúne tareas y sesiones de grupo, con panel de próximos eventos y recordatorios inteligentes en Pro y Academy.
 - Promediador ponderado persistente por materia, con cálculo en vivo, edición de actividades y validaciones.
 - Biblioteca de materiales para planes Pro y Academy: guarda apuntes, PDF, videos, ejercicios y enlaces, con filtros por materia y tipo.
 - Registro e inicio de sesión de estudiantes con correo y contraseña.
 - Espacio académico persistente: materias y tareas se guardan en MongoDB y se aíslan por cuenta; el navegador solo conserva una caché para cargar más rápido.
-- Asistente Kiday IA conectado a un proveedor compatible con OpenAI. El backend inyecta el catálogo vigente en el prompt para que las recomendaciones sean reales.
-- Grupos de estudio persistentes: crear grupos, unirse con código, ver miembros, programar sesiones, conversar en el chat interno y salir o eliminar según el rol.
+- Asistente Kiday IA conectado a un proveedor compatible con OpenAI. El backend inyecta el catálogo vigente en el prompt y exige plan Pro o Academy.
+- Grupos de estudio persistentes para Academy: crear grupos, unirse con código, ver miembros, programar sesiones, conversar en el chat interno y salir o eliminar según el rol.
+- Página de planes dentro de la app con capacidades desbloqueadas, plan actual y solicitud de cambio por contacto.
 - Rutas de la aplicación y del panel administrativo protegidas, con fallback de SPA para GitHub Pages.
 
 ### Administración
@@ -248,17 +249,17 @@ GitHub Actions ejecuta el workflow **CI** en cada push y pull request: levanta l
 | POST | `/api/materials` | Sesión con plan Pro | Guarda un material con título, enlace, tipo y materia. |
 | PATCH | `/api/materials/:id` | Sesión con plan Pro | Actualiza un material propio. |
 | DELETE | `/api/materials/:id` | Sesión con plan Pro | Elimina un material propio. |
-| GET | `/api/groups` | Sesión | Lista los grupos a los que pertenece el estudiante. |
-| POST | `/api/groups` | Sesión | Crea un grupo y genera un código de invitación. |
-| POST | `/api/groups/join` | Sesión | Une al estudiante a un grupo mediante su código. |
-| GET | `/api/groups/:id` | Sesión | Devuelve el grupo, sus miembros y próximas sesiones. |
-| POST | `/api/groups/:id/leave` | Sesión | Sale de un grupo; el creador no puede salir. |
-| DELETE | `/api/groups/:id` | Sesión | Elimina un grupo propio y sus datos asociados. |
-| POST | `/api/groups/:id/sessions` | Sesión | Programa una sesión; solo el creador. |
-| DELETE | `/api/groups/:id/sessions/:sessionId` | Sesión | Elimina una sesión; solo el creador. |
-| GET | `/api/groups/:id/messages` | Sesión | Devuelve los últimos mensajes del grupo. |
-| POST | `/api/groups/:id/messages` | Sesión con rate limit | Envía un mensaje al grupo. |
-| DELETE | `/api/groups/:id/messages/:messageId` | Sesión | Elimina un mensaje propio; el creador puede moderar. |
+| GET | `/api/groups` | Sesión con plan Academy | Lista los grupos a los que pertenece el estudiante. |
+| POST | `/api/groups` | Sesión con plan Academy | Crea un grupo y genera un código de invitación. |
+| POST | `/api/groups/join` | Sesión con plan Academy | Une al estudiante a un grupo mediante su código. |
+| GET | `/api/groups/:id` | Sesión con plan Academy | Devuelve el grupo, sus miembros y próximas sesiones. |
+| POST | `/api/groups/:id/leave` | Sesión con plan Academy | Sale de un grupo; el creador no puede salir. |
+| DELETE | `/api/groups/:id` | Sesión con plan Academy | Elimina un grupo propio y sus datos asociados. |
+| POST | `/api/groups/:id/sessions` | Sesión con plan Academy | Programa una sesión; solo el creador. |
+| DELETE | `/api/groups/:id/sessions/:sessionId` | Sesión con plan Academy | Elimina una sesión; solo el creador. |
+| GET | `/api/groups/:id/messages` | Sesión con plan Academy | Devuelve los últimos mensajes del grupo. |
+| POST | `/api/groups/:id/messages` | Sesión Academy con rate limit | Envía un mensaje al grupo. |
+| DELETE | `/api/groups/:id/messages/:messageId` | Sesión con plan Academy | Elimina un mensaje propio; el creador puede moderar. |
 | GET | `/api/admin/stats` | Admin | Métricas del panel. |
 | GET | `/api/admin/messages` | Admin | Lista mensajes; filtro `?status=nuevo`. |
 | PATCH | `/api/admin/messages/:id` | Admin | Cambia el estado del mensaje. |
@@ -267,7 +268,7 @@ GitHub Actions ejecuta el workflow **CI** en cada push y pull request: levanta l
 | POST | `/api/admin/services` | Admin | Crea un plan. |
 | PATCH | `/api/admin/services/:id` | Admin | Actualiza un plan. |
 | DELETE | `/api/admin/services/:id` | Admin | Elimina un plan. |
-| POST | `/api/ai/chat` | Público con rate limit | Conversa con Kiday IA. |
+| POST | `/api/ai/chat` | Sesión con plan Pro | Conversa con Kiday IA. |
 
 Las rutas protegidas esperan `Authorization: Bearer <token>`. El token se guarda en `localStorage` con la clave `kiday-token`.
 
@@ -318,11 +319,11 @@ npm run seed
 - Rate limit en registro, login, contacto, chat de IA y envío de mensajes de grupo.
 - Validación y normalización de entradas en el backend; errores internos no se filtran al cliente.
 - El catálogo público solo expone planes activos.
-- El endpoint de IA no requiere sesión para que el asistente sea accesible desde la demo, pero está limitado a 20 solicitudes cada 10 minutos por IP y a 700 tokens de salida.
+- El endpoint de IA exige sesión con plan Pro o Academy y está limitado a 20 solicitudes cada 10 minutos por IP y a 700 tokens de salida.
 - Las claves de Mongo, admin e IA viven únicamente en variables de entorno del backend.
 - Los estudiantes solo acceden a `/app`; las rutas `/api/admin/*` exigen rol `admin`.
 - Las rutas `/api/workspace/*`, `/api/grades/*`, `/api/materials/*` y `/api/groups/*` obtienen el `userId` de la sesión y nunca aceptan un usuario enviado por el cliente, por lo que no permiten leer ni modificar datos de otra cuenta. Los detalles de un grupo solo se devuelven a sus miembros.
-- `/api/materials/*` exige la capacidad `materials`, incluida en Kiday Pro y Kiday Academy; las cuentas Free reciben `403`.
+- `/api/materials/*` exige la capacidad `materials` y `/api/ai/*` exige `assistant`, ambas incluidas en Kiday Pro y Kiday Academy. `/api/groups/*` exige `groups`, incluida solo en Kiday Academy. Las cuentas sin la capacidad reciben `403`.
 
 Para una siguiente etapa se recomienda migrar el token a cookies `HttpOnly`, agregar verificación de email y limitar el chat a usuarios autenticados.
 

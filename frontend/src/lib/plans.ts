@@ -9,6 +9,48 @@ type PlanMeta = {
   cardClass: string;
 };
 
+export const PLAN_ORDER: PlanSlug[] = ["kiday-free", "kiday-pro", "kiday-academy"];
+
+export const PLAN_CAPABILITIES: Record<PlanSlug, string[]> = {
+  "kiday-free": ["subjects", "tasks", "averager", "calendar"],
+  "kiday-pro": [
+    "subjects",
+    "tasks",
+    "averager",
+    "calendar",
+    "assistant",
+    "materials",
+    "smart-reminders",
+  ],
+  "kiday-academy": [
+    "subjects",
+    "tasks",
+    "averager",
+    "calendar",
+    "assistant",
+    "materials",
+    "smart-reminders",
+    "groups",
+    "private-chats",
+    "mentoring",
+    "academic-tracking",
+  ],
+};
+
+export const CAPABILITY_LABELS: Record<string, string> = {
+  subjects: "Materias y tareas",
+  tasks: "Recordatorios académicos",
+  averager: "Promediador ponderado",
+  calendar: "Calendario mensual",
+  assistant: "Asistente Kiday IA",
+  materials: "Biblioteca de materiales",
+  "smart-reminders": "Recordatorios inteligentes",
+  groups: "Grupos de estudio",
+  "private-chats": "Chats privados",
+  mentoring: "Mentorías",
+  "academic-tracking": "Seguimiento académico",
+};
+
 export const PLAN_META: Record<PlanSlug, PlanMeta> = {
   "kiday-free": {
     slug: "kiday-free",
@@ -42,4 +84,8 @@ export function getPlanMeta(plan: PlanSlug | null | undefined) {
 
 export function hasCapability(user: AuthUser | null, capability: string) {
   return user?.capabilities.includes(capability) ?? false;
+}
+
+export function planRank(plan: PlanSlug | null | undefined) {
+  return PLAN_ORDER.indexOf(plan ?? "kiday-free");
 }

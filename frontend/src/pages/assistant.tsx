@@ -9,7 +9,10 @@ import {
   Sparkles,
   Wand2,
 } from "lucide-react";
+import { PlanGate } from "@/components/plan-gate";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
+import { hasCapability } from "@/lib/plans";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -30,6 +33,8 @@ const capabilities = [
 ];
 
 export function AssistantPage() {
+  const { user } = useAuth();
+  const canUse = hasCapability(user, "assistant");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [prompt, setPrompt] = useState("");
   const [sending, setSending] = useState(false);
@@ -40,6 +45,28 @@ export function AssistantPage() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, sending]);
+
+  if (!canUse) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <h2 className="text-2xl font-semibold tracking-tight">Asistente IA</h2>
+          <p className="mt-1 text-sm text-[var(--muted)]">Tu compañero de estudio para entender, practicar y repasar.</p>
+        </div>
+        <PlanGate
+          requiredPlan="kiday-pro"
+          title="Kiday IA está disponible en Kiday Pro"
+          description="Sube de plan para conversar con el asistente académico, pedir explicaciones paso a paso, generar quizzes y resumir tus apuntes."
+          benefits={[
+            "Explicaciones paso a paso",
+            "Quizzes de práctica",
+            "Resúmenes de apuntes",
+            "Recomendaciones según tu plan",
+          ]}
+        />
+      </div>
+    );
+  }
 
   async function requestReply(history: ChatMessage[]) {
     setSending(true);

@@ -40,9 +40,9 @@ export function createApp() {
   app.use("/api/auth", authRouter);
   app.use("/api/services", servicesRouter);
   app.use("/api/contact", contactRouter);
-  app.use("/api/ai", aiRouter);
+  app.use("/api/ai", authenticate, requireCapability("assistant"), aiRouter);
   app.use("/api/workspace", authenticate, workspaceRouter);
-  app.use("/api/groups", authenticate, groupsRouter);
+  app.use("/api/groups", authenticate, requireCapability("groups"), groupsRouter);
   app.use("/api/grades", authenticate, gradesRouter);
   app.use("/api/materials", authenticate, requireCapability("materials"), materialsRouter);
   app.use("/api/admin", authenticate, requireAdmin, adminRouter);

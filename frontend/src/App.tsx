@@ -18,6 +18,7 @@ import { LandingPage } from "@/pages/landing";
 import { LoginPage } from "@/pages/login";
 import { MaterialsPage } from "@/pages/materials";
 import { NotFoundPage } from "@/pages/not-found";
+import { PlansPage } from "@/pages/plans";
 import { RegisterPage } from "@/pages/register";
 import { SubjectsPage } from "@/pages/subjects";
 import { TasksPage } from "@/pages/tasks";
@@ -57,6 +58,7 @@ export function App() {
               <Route path="grupos" element={<GroupsPage />} />
               <Route path="promediador" element={<AveragerPage />} />
               <Route path="materiales" element={<MaterialsPage />} />
+              <Route path="planes" element={<PlansPage />} />
               <Route path="asistente" element={<AssistantPage />} />
             </Route>
           </Route>

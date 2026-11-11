@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
+import type { LucideIcon } from "lucide-react";
 import {
   BadgeCheck,
   Bell,
@@ -12,6 +13,7 @@ import {
   ListTodo,
   LibraryBig,
   Loader2,
+  LockKeyhole,
   LogOut,
   Menu,
   RefreshCw,
@@ -24,21 +26,29 @@ import { PlanIcon } from "@/components/plan-icon";
 import { SkipLink } from "@/components/skip-link";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/lib/auth-context";
-import { getPlanMeta } from "@/lib/plans";
+import { getPlanMeta, hasCapability } from "@/lib/plans";
 import { useStudy } from "@/lib/study-store";
 
-const primaryLinks = [
+type SidebarLink = {
+  label: string;
+  to: string;
+  icon: LucideIcon;
+  end?: boolean;
+  requires?: string;
+};
+
+const primaryLinks: SidebarLink[] = [
   { label: "Panel principal", to: "/app", icon: LayoutDashboard, end: true },
   { label: "Mis materias", to: "/app/materias", icon: BookOpen },
   { label: "Tareas", to: "/app/tareas", icon: ListTodo },
   { label: "Calendario", to: "/app/calendario", icon: CalendarDays },
-  { label: "Grupos de estudio", to: "/app/grupos", icon: UsersRound },
+  { label: "Grupos de estudio", to: "/app/grupos", icon: UsersRound, requires: "groups" },
 ];
 
-const toolLinks = [
-  { label: "Asistente IA", to: "/app/asistente", icon: Sparkles },
+const toolLinks: SidebarLink[] = [
+  { label: "Asistente IA", to: "/app/asistente", icon: Sparkles, requires: "assistant" },
   { label: "Promediador", to: "/app/promediador", icon: GraduationCap },
-  { label: "Materiales", to: "/app/materiales", icon: LibraryBig },
+  { label: "Materiales", to: "/app/materiales", icon: LibraryBig, requires: "materials" },
 ];
 
 const titles: Record<string, string> = {
@@ -50,6 +60,7 @@ const titles: Record<string, string> = {
   "/app/asistente": "Asistente IA",
   "/app/promediador": "Promediador",
   "/app/materiales": "Biblioteca de materiales",
+  "/app/planes": "Planes",
 };
 
 function navClass({ isActive }: { isActive: boolean }) {
@@ -72,24 +83,32 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
         <div>
           <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600">Mi espacio</p>
           <div className="space-y-1">
-            {primaryLinks.map(({ label, to, icon: Icon, end }) => (
-              <NavLink key={to} to={to} end={end} onClick={onNavigate} className={navClass}>
-                <Icon size={16} />
-                {label}
-              </NavLink>
-            ))}
+            {primaryLinks.map(({ label, to, icon: Icon, end, requires }) => {
+              const locked = requires ? !hasCapability(user, requires) : false;
+              return (
+                <NavLink key={to} to={to} end={end} onClick={onNavigate} className={navClass}>
+                  <Icon size={16} />
+                  {label}
+                  {locked && <LockKeyhole size={11} className="ml-auto text-slate-600" aria-label="Requiere un plan superior" />}
+                </NavLink>
+              );
+            })}
           </div>
         </div>
 
         <div>
           <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-slate-600">Herramientas</p>
           <div className="space-y-1">
-            {toolLinks.map(({ label, to, icon: Icon }) => (
-              <NavLink key={to} to={to} onClick={onNavigate} className={navClass}>
-                <Icon size={16} />
-                {label}
-              </NavLink>
-            ))}
+            {toolLinks.map(({ label, to, icon: Icon, requires }) => {
+              const locked = requires ? !hasCapability(user, requires) : false;
+              return (
+                <NavLink key={to} to={to} onClick={onNavigate} className={navClass}>
+                  <Icon size={16} />
+                  {label}
+                  {locked && <LockKeyhole size={11} className="ml-auto text-slate-600" aria-label="Requiere un plan superior" />}
+                </NavLink>
+              );
+            })}
           </div>
         </div>
       </nav>
@@ -106,12 +125,21 @@ function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
             </div>
           </div>
           {plan.slug === "kiday-academy" ? (
-            <p className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium text-emerald-500">
-              <BadgeCheck size={12} /> Todo desbloqueado
-            </p>
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <p className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-500">
+                <BadgeCheck size={12} /> Todo desbloqueado
+              </p>
+              <Link
+                to="/app/planes"
+                onClick={onNavigate}
+                className="inline-flex items-center gap-1 text-[10px] font-medium text-[var(--accent)] hover:underline"
+              >
+                Ver plan <ChevronRight size={12} />
+              </Link>
+            </div>
           ) : (
             <Link
-              to="/#planes"
+              to="/app/planes"
               onClick={onNavigate}
               className="mt-2 inline-flex items-center gap-1 text-[10px] font-medium text-[var(--accent)] hover:underline"
             >

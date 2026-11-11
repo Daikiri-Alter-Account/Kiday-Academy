@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Brand } from "@/components/brand";
 import { ContactSection } from "@/components/contact-section";
 import { Header } from "@/components/header";
@@ -10,11 +10,20 @@ import { useServices } from "@/lib/use-services";
 
 export function LandingPage() {
   const { services, status, error, reload } = useServices();
+  const { hash } = useLocation();
   const [subject, setSubject] = useState("Consulta general");
 
   useEffect(() => {
     document.title = "Kiday Studio | Estudia a tu manera";
   }, []);
+
+  useEffect(() => {
+    if (!hash) return;
+    const timer = window.setTimeout(() => {
+      document.getElementById(hash.slice(1))?.scrollIntoView({ behavior: "smooth" });
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [hash]);
 
   function handleSelectPlan(planName: string) {
     setSubject(planName);
