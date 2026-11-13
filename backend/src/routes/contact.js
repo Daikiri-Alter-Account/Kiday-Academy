@@ -29,7 +29,7 @@ router.post(
 
     res.status(201).json({
       id: result.insertedId.toString(),
-      message: "Mensaje recibido. Te responderemos muy pronto.",
+      message: "Mensaje recibido y guardado. El equipo puede revisarlo desde el panel de administración.",
     });
   }),
 );

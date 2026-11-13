@@ -56,13 +56,16 @@ export function ContactSection({ services, subject, onSubjectChange }: ContactSe
 
           <ul className="mt-6 space-y-3 text-xs text-[var(--muted)]">
             <li className="flex items-center gap-2.5">
-              <Mail size={15} className="text-[var(--accent)]" /> hola@kiday.studio
+              <Mail size={15} className="text-[var(--accent)]" />
+              <a href="mailto:hola@kiday.studio" className="transition hover:text-[var(--foreground)]">
+                hola@kiday.studio
+              </a>
             </li>
             <li className="flex items-center gap-2.5">
-              <Clock3 size={15} className="text-[var(--accent)]" /> Respondemos en menos de 24 horas
+              <Clock3 size={15} className="text-[var(--accent)]" /> Revisamos los mensajes desde el panel de administración
             </li>
             <li className="flex items-center gap-2.5">
-              <ShieldCheck size={15} className="text-[var(--accent)]" /> Tus datos solo se usan para contactarte
+              <ShieldCheck size={15} className="text-[var(--accent)]" /> No incluyas contraseñas ni datos sensibles
             </li>
           </ul>
         </div>
@@ -73,7 +76,7 @@ export function ContactSection({ services, subject, onSubjectChange }: ContactSe
               <span className="grid size-12 place-items-center rounded-2xl bg-emerald-400/10 text-emerald-400">
                 <Check size={24} />
               </span>
-              <h3 className="mt-4 text-base font-semibold">¡Mensaje enviado!</h3>
+              <h3 className="mt-4 text-base font-semibold">¡Mensaje recibido!</h3>
               <p className="mt-1 max-w-xs text-xs leading-5 text-[var(--muted)]">{feedback}</p>
               <button
                 type="button"
